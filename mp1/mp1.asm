@@ -154,26 +154,25 @@ LOOP3
     BRp LOOP3
     ; now R4 store the number of leading sapces
     LD  R0,PCSAPCE
-    ADD R2,R4,#0
+    ADD R2,R4,#0  ;store R4 in R2
 LOOP4 ; print leading sapces
     OUT
     ADD R2,R2,#-1
     BRp LOOP4
-    ST  R1,PC_REG_1
+    LD  R1,PC_REG_1
     ADD R2,R3,#0
 LOOP5  ;print characters
     LDR R0,R1,#0
     OUT
     ADD R1,R1,#1
     ADD R2,R2,#-1
-    BRp LOOP5
-    AND R1,R1,#0
+    BRp LOOP5   
+    AND R1,R1,#0    ; start calculating trailing spaces
     ADD R1,R1,#-6
     ADD R1,R1,R4
     ADD R1,R1,R3 ; R1's inverse value is the number of trailing sapces
     NOT R1,R1
     ADD R1,R1,#1 ; now R1 stores the number of trailing sapces
-    AND R2,R2,#0
     LD R0,PCSAPCE
 LOOP6   ; print trailing sapces
     OUT
