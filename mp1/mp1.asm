@@ -132,6 +132,8 @@ PRINT_CENTERED
     ST  R4,  PC_REG_4
     ST  R7,  PC_REG_7 
     AND R3,R3,#0
+    LDR R2,R1,#0
+    BRz DEAL0           ;if a string contains nothing in the form of "", execute here
 LOOP1   
     LDR R2,R1,#0
     BRz CONTINUE        ; contine
@@ -197,6 +199,10 @@ LOOP6   ; print trailing sapces
     ADD R1,R1,#-1
     BRp LOOP6
     BR  END_PRINT_CENTERED
+DEAL0   ;deal with case when input strings is ""
+    LEA R0, ALLSPACES
+    PUTS
+    BR END_PRINT_CENTERED
 PC_REG_0  .BLKW   1
 PC_REG_1  .BLKW   1
 PC_REG_2  .BLKW   1
@@ -204,6 +210,7 @@ PC_REG_3  .BLKW   1
 PC_REG_4  .BLKW   1
 PC_REG_7  .BLKW   1
 PCSAPCE   .FILL   x20
+ALLSPACES .STRINGZ "      "     ; case when input string is ""
 END_PRINT_CENTERED 
     LD  R0,  PC_REG_0
     LD  R1,  PC_REG_1
