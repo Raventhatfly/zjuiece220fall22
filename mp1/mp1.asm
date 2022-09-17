@@ -64,8 +64,8 @@ PRINT_SLOT
     ST  R2,  PS_REG_2   
     ST  R7,  PS_REG_7 
     ADD R2,R1,#7
-    ADD R2,R2,#-10
     LD  R0,   ZERO
+    ADD R2,R2,#-10
     BRn PS_ONE_DIGIT
     ADD R2,R2,#-10  
     BRn TEEN
@@ -143,13 +143,17 @@ CONTINUE
     BR PREP_OUT
 LESS   ; less than 6 characters
     AND R4,R4,#0        
-    AND R2,R2,#0
-LOOP3   
+    AND R1,R1,#0
+    ADD R1,R1,#-6  ; R1 is now negative value of total number of characters
+    ADD R1,R1,R3   ; R1 is now negative value of total number of spaces
+    NOT R1,R1
+    ADD R1,R1,#1   ; R1 is now value of total number of spaces
+LOOP3
     ADD R4,R4,#1 
     NOT R2,R4
     ADD R2,R2,#1  ; R2<-(-R4)
     ADD R2,R2,R2  ; R2<-(-2*R4)
-    ADD R2,R3,R2  ; R2=R3-2*R4
+    ADD R2,R1,R2  ; R2=R1-2*R4
     ADD R2,R2,#-1 ; if finished, the remain will only be 0 or 1
     BRp LOOP3
     ; now R4 store the number of leading sapces
