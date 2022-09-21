@@ -21,13 +21,69 @@ MAIN_LOOP2
     RETURN1
     BR      MAIN_LOOP2
 
-END_MAIN
+END_FILLING
+    
+    
+    ; starts printing the timetable from here
+    ; printing the first line
+    LD      R1,NULL
+    JSR     PRINT_CENTERED
+    LD      R0,SEPARATION
+    OUT
+    LD      R1,MON
+    JSR     PRINT_CENTERED
+    OUT
+    LD      R1,TUE
+    JSR     PRINT_CENTERED
+    OUT
+    LD      R1,WED
+    JSR     PRINT_CENTERED
+    OUT
+    LD      R1,THU
+    JSR     PRINT_CENTERED
+    OUT
+    LD      R1,FRI
+    JSR     PRINT_CENTERED
+    OUT
+    LD      R0,NL
+    OUT
+
+    ; print rest of the lines
+    LD      R2,EVENT_LIST
+    AND     R5,R5,#0
+    MAIN_LOOP4
+    LD      R0,SEPARATION
+    AND     R3,R3,#0
+    ADD     R3,R3,#5        ; day iterator
+    ADD     R1,R5,#0
+    JSR     PRINT_SLOT
+    MAIN_LOOP3
+    OUT
+    LDR     R1,R2,#0
+    JSR     PRINT_CENTERED  
+    ADD     R3,R3,#-1
+    BRp     MAIN_LOOP3  ; current time not over
+    ; current time over, continue next line
+    OUT
+    LD      R0,NL
+    OUT     
+    ADD     R5,R5,#1
+    BRzp    MAIN_LOOP4 ; time iteration not finished
     HALT
+
+
+; lookup table starts here
 ARRAY           .FILL   x4000
 EVENT_LIST      .FILL   x5000
 NULL            .FILL   x0000
 SLOT_NUMBER     .FILL   x0050
-
+MON             .STRINGZ    "Mon"
+TUE             .STRINGZ    "Tue"
+WED             .STRINGZ    "Wed"
+THU             .STRINGZ    "Thu"
+FRI             .STRINGZ    "Fri"
+SEPARATION      .FILL       x007c   ;"|"
+NL              .FILL       x000a   ;"\n"
 
 
 HANDEL  ; find the slot pointer of the character
@@ -46,7 +102,7 @@ HANDEL  ; find the slot pointer of the character
     BRp     HANDEL_LOOP1
     ADD     R1,R1,#1
     LDR     R2,R1,#0
-    BRz     END_MAIN    ; if next location is NULL, this means that the initialization is over
+    BRz     END_FILLING    ; if next location is NULL, this means that the initialization is over
     BR      RETURN1
     
     HANDEL_STORE
@@ -136,7 +192,7 @@ RET
 
 PRINT_CENTERED
     ; Register Table at subroutine PRINT_SLOT
-    ; R0 number of trailing sapces and sometimes terator
+    ; R0 number of trailing sapces and sometimes iterator
     ; R1 universal iterator(meaning changes in different loop)
     ; R2 universal iterator(meaning changes in different loop)
     ; R3 number of characters to be aligned in the middle
