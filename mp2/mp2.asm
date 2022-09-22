@@ -22,53 +22,57 @@ MAIN_LOOP1
     BR      MAIN_LOOP2
 
 END_FILLING
-    ADD     R0,R0,#0        ; do nothing here, delete this in the future
     
-    ; ; starts printing the timetable from here
-    ; ; printing the first line
-    ; LD      R1,NULL
-    ; JSR     PRINT_CENTERED
-    ; LD      R0,SEPARATION
-    ; OUT
-    ; LD      R1,MON
-    ; JSR     PRINT_CENTERED
-    ; OUT
-    ; LD      R1,TUE
-    ; JSR     PRINT_CENTERED
-    ; OUT
-    ; LD      R1,WED
-    ; JSR     PRINT_CENTERED
-    ; OUT
-    ; LD      R1,THU
-    ; JSR     PRINT_CENTERED
-    ; OUT
-    ; LD      R1,FRI
-    ; JSR     PRINT_CENTERED
-    ; OUT
-    ; LD      R0,NL
-    ; OUT
+    ; starts printing the timetable from here
+    ; printing the first line
+    LEA     R1,NULL
+    JSR     PRINT_CENTERED
+    LD      R0,SEPARATION
+    OUT
+    LEA     R1,MON
+    JSR     PRINT_CENTERED
+    OUT
+    LEA     R1,TUE
+    JSR     PRINT_CENTERED
+    OUT
+    LEA     R1,WED
+    JSR     PRINT_CENTERED
+    OUT
+    LEA     R1,THU
+    JSR     PRINT_CENTERED
+    OUT
+    LEA     R1,FRI
+    JSR     PRINT_CENTERED
+    LD      R0,NL
+    OUT
 
-    ; ; print rest of the lines
-    ; LD      R2,EVENT_LIST
-    ; AND     R5,R5,#0
-    ; MAIN_LOOP4
-    ; LD      R0,SEPARATION
-    ; AND     R3,R3,#0
-    ; ADD     R3,R3,#5        ; day iterator
-    ; ADD     R1,R5,#0
-    ; JSR     PRINT_SLOT
-    ; MAIN_LOOP3
-    ; OUT
-    ; LDR     R1,R2,#0
-    ; JSR     PRINT_CENTERED  
-    ; ADD     R3,R3,#-1
-    ; BRp     MAIN_LOOP3  ; current time not over
-    ; ; current time over, continue next line
-    ; OUT
-    ; LD      R0,NL
-    ; OUT     
-    ; ADD     R5,R5,#1
-    ; BRzp    MAIN_LOOP4 ; time iteration not finished
+    ; print rest of the lines
+    LD      R2,ARRAY
+    AND     R5,R5,#0        ; time iterator
+    MAIN_LOOP4
+    LD      R0,SEPARATION
+    AND     R3,R3,#0
+    ADD     R3,R3,#5        ; day iterator
+    ADD     R1,R5,#0
+    JSR     PRINT_SLOT
+    MAIN_LOOP3
+    OUT
+    LDR     R1,R2,#0
+    BRnp    SKIP1
+    LEA     R1,NULL
+    SKIP1
+    JSR     PRINT_CENTERED  
+    ADD     R2,R2,#1
+    ADD     R3,R3,#-1
+    BRp     MAIN_LOOP3  ; current time not over
+    ; current time over, continue next line
+    LD      R0,NL
+    OUT     
+    ADD     R5,R5,#1
+    AND     R4,R4,#0
+    ADD     R4,R4,#-16
+    ADD     R4,R4,R5
+    BRn     MAIN_LOOP4 ; time iteration not finished
 END_PROGRAM
     HALT
 
