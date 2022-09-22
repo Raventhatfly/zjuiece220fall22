@@ -12,63 +12,64 @@ MAIN_LOOP1
 ; read event list
 
     LD      R1,EVENT_LIST
-MAIN_LOOP2
+    RETURN1
     ADD     R3,R1,#0        ; R3 points to the first character, copy the first value of R1
+    MAIN_LOOP2
     ; start to process event list
     LDR     R2,R1,#0    ; store the current character to R2
     BRz     HANDEL      ; if end of character, go to find its slot pointer
     ADD     R1,R1,#1
-    RETURN1
     BR      MAIN_LOOP2
 
 END_FILLING
+    ADD     R0,R0,#0        ; do nothing here, delete this in the future
     
-    
-    ; starts printing the timetable from here
-    ; printing the first line
-    LD      R1,NULL
-    JSR     PRINT_CENTERED
-    LD      R0,SEPARATION
-    OUT
-    LD      R1,MON
-    JSR     PRINT_CENTERED
-    OUT
-    LD      R1,TUE
-    JSR     PRINT_CENTERED
-    OUT
-    LD      R1,WED
-    JSR     PRINT_CENTERED
-    OUT
-    LD      R1,THU
-    JSR     PRINT_CENTERED
-    OUT
-    LD      R1,FRI
-    JSR     PRINT_CENTERED
-    OUT
-    LD      R0,NL
-    OUT
+    ; ; starts printing the timetable from here
+    ; ; printing the first line
+    ; LD      R1,NULL
+    ; JSR     PRINT_CENTERED
+    ; LD      R0,SEPARATION
+    ; OUT
+    ; LD      R1,MON
+    ; JSR     PRINT_CENTERED
+    ; OUT
+    ; LD      R1,TUE
+    ; JSR     PRINT_CENTERED
+    ; OUT
+    ; LD      R1,WED
+    ; JSR     PRINT_CENTERED
+    ; OUT
+    ; LD      R1,THU
+    ; JSR     PRINT_CENTERED
+    ; OUT
+    ; LD      R1,FRI
+    ; JSR     PRINT_CENTERED
+    ; OUT
+    ; LD      R0,NL
+    ; OUT
 
-    ; print rest of the lines
-    LD      R2,EVENT_LIST
-    AND     R5,R5,#0
-    MAIN_LOOP4
-    LD      R0,SEPARATION
-    AND     R3,R3,#0
-    ADD     R3,R3,#5        ; day iterator
-    ADD     R1,R5,#0
-    JSR     PRINT_SLOT
-    MAIN_LOOP3
-    OUT
-    LDR     R1,R2,#0
-    JSR     PRINT_CENTERED  
-    ADD     R3,R3,#-1
-    BRp     MAIN_LOOP3  ; current time not over
-    ; current time over, continue next line
-    OUT
-    LD      R0,NL
-    OUT     
-    ADD     R5,R5,#1
-    BRzp    MAIN_LOOP4 ; time iteration not finished
+    ; ; print rest of the lines
+    ; LD      R2,EVENT_LIST
+    ; AND     R5,R5,#0
+    ; MAIN_LOOP4
+    ; LD      R0,SEPARATION
+    ; AND     R3,R3,#0
+    ; ADD     R3,R3,#5        ; day iterator
+    ; ADD     R1,R5,#0
+    ; JSR     PRINT_SLOT
+    ; MAIN_LOOP3
+    ; OUT
+    ; LDR     R1,R2,#0
+    ; JSR     PRINT_CENTERED  
+    ; ADD     R3,R3,#-1
+    ; BRp     MAIN_LOOP3  ; current time not over
+    ; ; current time over, continue next line
+    ; OUT
+    ; LD      R0,NL
+    ; OUT     
+    ; ADD     R5,R5,#1
+    ; BRzp    MAIN_LOOP4 ; time iteration not finished
+END_PROGRAM
     HALT
 
 
@@ -84,22 +85,34 @@ THU             .STRINGZ    "Thu"
 FRI             .STRINGZ    "Fri"
 SEPARATION      .FILL       x007c   ;"|"
 NL              .FILL       x000a   ;"\n"
-
+INVALID_SLOT    .STRINGZ    " has an invalid slot number.\n"
+CONFLICT        .STRINGZ    " conflicts with an earlier event.\n"
 
 HANDEL  ; find the slot pointer of the character
     ADD     R1,R1,#1
-    LDR     R2,R1,#0    ; day information store to R1
+    LDR     R2,R1,#0    ; day information store to R2
     ADD     R1,R1,#1  
-    LDR     R4,R1,#0    ; day information store to R4
-    AND     R5,R5,#5    ; iteration through the 5 digits
+    LDR     R4,R1,#0    ; time information store to R4
+    BR     JUDGE_INVALID_SLOT
+    JUDGE_INVALID_SLOT_RETURN
+    AND     R5,R5,#0    ; iterate 5 times 
+    ADD     R5,R5,#4
+    ADD     R2,R2,R2    ; move the first bit to the front
+    ADD     R2,R2,R2
+    ADD     R2,R2,R2
+    ADD     R2,R2,R2
+    ADD     R2,R2,R2
+    ADD     R2,R2,R2
+    ADD     R2,R2,R2
+    ADD     R2,R2,R2
     ADD     R2,R2,R2
     ADD     R2,R2,R2
     HANDEL_LOOP1
     ADD     R2,R2,R2    ; Now the current day digit is on the first digit
-    BRn      HANDEL_STORE          ; if this is the day of the event, store to the characters to the location of the pointer
+    BRn     HANDEL_STORE          ; if this is the day of the event, store to the characters to the location of the pointer
     HANDEL_RETURN1
     ADD     R5,R5,#-1   ; decrement day of the week
-    BRp     HANDEL_LOOP1
+    BRzp    HANDEL_LOOP1
     ADD     R1,R1,#1
     LDR     R2,R1,#0
     BRz     END_FILLING    ; if next location is NULL, this means that the initialization is over
@@ -110,24 +123,46 @@ HANDEL  ; find the slot pointer of the character
     ; R3 is the initial address of characters
     ; R4 is the current time
     ; Do not change R1, R2, R5
-    ADD     R5,R5,#-1
-    ADD     R4,R4,#7
-    ADD     R4,R4,#-1  ; to become ADD R4,R4,#6 later
+
     AND     R6,R6,#0
     AND     R0,R0,#0
-    ADD     R6,R6,#15
-    ; multiplication and adding here to get R0=R4*16+R5+(x5000)
+    ADD     R6,R6,#4        ; one line containing 4+1=5 pointers
+    ; multiplication and adding here to get R0=R4*16+R5+(x4000)
     HANDEL_STORE_LOOP
     ADD     R0,R0,R4
     ADD     R6,R6,#-1
     BRzp     HANDEL_STORE_LOOP     
     ADD     R0,R0,R5
-    LD      R5,EVENT_LIST
-    ADD     R0,R0,R5
+    LD      R6,ARRAY
+    ADD     R0,R0,R6
+    ; check if the content in location R0 is empty
+    LDR     R6,R0,#0
+    BRnp    CONFLICT_TRUE
     ; store character beginning address R3 into location R0
     STR     R3,R0,#0
     BR      HANDEL_RETURN1
 
+    
+    
+JUDGE_INVALID_SLOT
+    ADD     R4,R4,#-15
+    BRp     JUDGE_INVALID_SLOT_TRUE
+    ADD     R4,R4,#15
+    BRn     JUDGE_INVALID_SLOT_TRUE
+    BR  JUDGE_INVALID_SLOT_RETURN
+    JUDGE_INVALID_SLOT_TRUE
+    ADD     R0,R3,#0
+    PUTS
+    LEA      R0,INVALID_SLOT
+    PUTS
+    BR      END_PROGRAM
+    
+CONFLICT_TRUE
+    ADD     R0,R3,#0
+    PUTS
+    LEA     R0,CONFLICT
+    PUTS
+    BR      END_PROGRAM
 
 
 
