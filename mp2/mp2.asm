@@ -3,7 +3,7 @@
     LD      R1,ARRAY
     LD      R2,NULL
     LD      R3,SLOT_NUMBER
-MAIN_LOOP1
+MAIN_LOOP1      ; clear the location beginning at x4000
     STR     R2,R1,#0
     ADD     R1,R1,#1
     ADD     R3,R3,#-1
@@ -23,7 +23,7 @@ MAIN_LOOP1
 
 END_FILLING
     
-    ; starts printing the timetable from here
+    
     ; printing the first line
 
     ;to be deleted here
@@ -48,12 +48,12 @@ END_FILLING
     ; LD      R0,NL
     ; OUT
 
-    LEA     R1,NULL
+    LEA     R1,NULL     ; starts printing the timetable from here
     JSR     PRINT_CENTERED
     LD      R0,SEPARATION
     OUT     
     AND     R2,R2,#0
-    ADD     R2,R2,#5
+    ADD     R2,R2,#5    ; iterator for the 5 days of the week
     LEA     R1,MON
 MAIN_LOOP5
     JSR     PRINT_CENTERED
@@ -252,7 +252,10 @@ RET
 ;end of PRINT_SLOT
 
 
-; PRINT_CENTERED -- Pass a number to R1 and print the time according to the value of R1
+; PRINT_CENTERED -- Pass the location of the first character of a string to R1 
+; and align the string at the middle of a proccessed string whose maximum value
+; is limited to 6, and string more then 6 characters long will take only the 6 on
+; the front.
 ; INPUT: R1, a time period from 0 ~ 15 that matches 7:00 ~ 22:00
 ; OUTPUT: Print time string from "7:00 " to "22:00 " with a trailing space
 
