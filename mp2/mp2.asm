@@ -185,17 +185,25 @@ CONFLICT_TRUE
     BR      END_PROGRAM
 
 
+; PRINT_SLOT -- Pass a number to R1 and print the time according to the value of R1
+; INPUT: R1, a time period from 0 ~ 15 that matches 7:00 ~ 22:00
+; OUTPUT: Print time string from "7:00 " to "22:00 " with a trailing space
+
+; OTHER REGISTERS: callee-saved (except for R7)
+; SIDE EFFECTS: waits for user to press a key, echos the keystroke to the
+;               display, and consumes the keystroke
+
+; REGISTER USE (registers have multiple uses in different parts of code):
+;   R0 - character ascii register / iterator
+;   R2 universal iterator(meaning changes in different loop)
 
 PRINT_SLOT
-    ; Register Table at subroutine PRINT_SLOT
-    ; R0 character ascii register 
-    ; R2 universal iterator(meaning changes in different loop)
 
     ST  R0,  PS_REG_0
     ST  R2,  PS_REG_2   
     ST  R7,  PS_REG_7 
     ADD R2,R1,#7
-    LD  R0,   ZERO
+    LD  R0,   ZERO      ; load ascii character 0
     ADD R2,R2,#-10
     BRn PS_ONE_DIGIT
     ADD R2,R2,#-10  
@@ -207,7 +215,7 @@ PRINT_SLOT
     OUT
     BR PS_RRE_RETURN  
 TEEN                ;time numbers from 10 ~ 19
-    ADD R2,R2,#10   ;restore R2
+    ADD R2,R2,#10   ;restore the value of R2 before the condition judgement
     ADD R0,R0,#1
     OUT
     ADD R0,R0,#-1
@@ -244,14 +252,25 @@ RET
 ;end of PRINT_SLOT
 
 
+; PRINT_CENTERED -- Pass a number to R1 and print the time according to the value of R1
+; INPUT: R1, a time period from 0 ~ 15 that matches 7:00 ~ 22:00
+; OUTPUT: Print time string from "7:00 " to "22:00 " with a trailing space
+
+; OTHER REGISTERS: callee-saved (except for R7)
+
+; REGISTER USE (registers have multiple uses in different parts of code):
+;   R0 - number of trailing sapces / iterator
+;   R1 - universal iterator(meaning changes in different loop)
+;   R2 - universal iterator(meaning changes in different loop)
+;   R3 - number of characters to be aligned in the middle
+;   R4 - number of leading sapces and sometimes iterator
+
+
+
 
 PRINT_CENTERED
     ; Register Table at subroutine PRINT_SLOT
-    ; R0 number of trailing sapces and sometimes iterator
-    ; R1 universal iterator(meaning changes in different loop)
-    ; R2 universal iterator(meaning changes in different loop)
-    ; R3 number of characters to be aligned in the middle
-    ; R4 number of leading sapces and sometimes iterator
+    
 
     ST  R0,  PC_REG_0
     ST  R1,  PC_REG_1
