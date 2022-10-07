@@ -25,26 +25,42 @@ END_FILLING
     
     ; starts printing the timetable from here
     ; printing the first line
+
+    ;to be deleted here
+    ; LEA     R1,NULL
+    ; JSR     PRINT_CENTERED
+    ; LD      R0,SEPARATION
+    ; OUT
+    ; LEA     R1,MON
+    ; JSR     PRINT_CENTERED
+    ; OUT
+    ; LEA     R1,TUE
+    ; JSR     PRINT_CENTERED
+    ; OUT
+    ; LEA     R1,WED
+    ; JSR     PRINT_CENTERED
+    ; OUT
+    ; LEA     R1,THU
+    ; JSR     PRINT_CENTERED
+    ; OUT
+    ; LEA     R1,FRI
+    ; JSR     PRINT_CENTERED
+    ; LD      R0,NL
+    ; OUT
+
     LEA     R1,NULL
     JSR     PRINT_CENTERED
     LD      R0,SEPARATION
-    OUT
+    OUT     
+    AND     R2,R2,#0
+    ADD     R2,R2,#5
     LEA     R1,MON
+MAIN_LOOP5
     JSR     PRINT_CENTERED
     OUT
-    LEA     R1,TUE
-    JSR     PRINT_CENTERED
-    OUT
-    LEA     R1,WED
-    JSR     PRINT_CENTERED
-    OUT
-    LEA     R1,THU
-    JSR     PRINT_CENTERED
-    OUT
-    LEA     R1,FRI
-    JSR     PRINT_CENTERED
-    LD      R0,NL
-    OUT
+    ADD     R1,R1,#1
+    ADD     R2,R2,#-1
+    BRnp    MAIN_LOOP5      
 
     ; print rest of the lines
     LD      R2,ARRAY
@@ -186,11 +202,11 @@ PRINT_SLOT
     BRn TEEN    
     ADD R0,R0,#2        ;time number equal or greater than 20
     OUT
-    ADD R0,R0,#-2
     ADD R0,R2,R0
+    ADD R0,R0,#-2
     OUT
     BR PS_RRE_RETURN  
-TEEN            ;time numbers from 10 ~ 19
+TEEN                ;time numbers from 10 ~ 19
     ADD R2,R2,#10   ;restore R2
     ADD R0,R0,#1
     OUT
