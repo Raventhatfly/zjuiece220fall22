@@ -76,7 +76,7 @@ MAIN_LOOP5
     LDR     R1,R2,#0
     BRnp    SKIP1
     LEA     R1,NULL
-    SKIP1
+    SKIP1   
     JSR     PRINT_CENTERED  
     ADD     R2,R2,#1
     ADD     R3,R3,#-1
@@ -90,7 +90,7 @@ MAIN_LOOP5
     ADD     R4,R4,R5
     BRn     MAIN_LOOP4 ; time iteration not finished
 END_PROGRAM
-    HALT
+    HALT        ; end of the program
 
 
 ; lookup table starts here
@@ -118,7 +118,7 @@ HANDEL  ; find the slot pointer of the character
     AND     R5,R5,#0    ; iterate 5 times 
     ADD     R5,R5,#4
     ADD     R2,R2,R2    ; move the first bit to the front
-    ADD     R2,R2,R2
+    ADD     R2,R2,R2    ; move several times
     ADD     R2,R2,R2
     ADD     R2,R2,R2
     ADD     R2,R2,R2
@@ -164,11 +164,11 @@ HANDEL  ; find the slot pointer of the character
 
     
     
-JUDGE_INVALID_SLOT
+JUDGE_INVALID_SLOT  ; determine if the schedule is valid
     ADD     R4,R4,#-15
-    BRp     JUDGE_INVALID_SLOT_TRUE
+    BRp     JUDGE_INVALID_SLOT_TRUE     ; time greater than 15, invalid
     ADD     R4,R4,#15
-    BRn     JUDGE_INVALID_SLOT_TRUE
+    BRn     JUDGE_INVALID_SLOT_TRUE     ; time smaller than 15, invalid
     BR  JUDGE_INVALID_SLOT_RETURN
     JUDGE_INVALID_SLOT_TRUE
     ADD     R0,R3,#0
@@ -177,7 +177,7 @@ JUDGE_INVALID_SLOT
     PUTS
     BR      END_PROGRAM
     
-CONFLICT_TRUE
+CONFLICT_TRUE       ; determine case of conflicts
     ADD     R0,R3,#0
     PUTS
     LEA     R0,CONFLICT
