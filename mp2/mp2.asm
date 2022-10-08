@@ -91,7 +91,7 @@ MAIN_LOOP5
     BRnp    MAIN_LOOP5      
 
     ; print rest of the lines
-    LD      R2,ARRAY
+    LD      R2,ARRAY        ; R2 points to the current address of the array
     AND     R5,R5,#0        ; time iterator
     MAIN_LOOP4
     LD      R0,SEPARATION   ; "|"
