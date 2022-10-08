@@ -234,10 +234,10 @@ PS_ONE_DIGIT    ;numbers with only one digit 7~9
 PS_RRE_RETURN ;prepare to return
     LD  R0,COL
     OUT
-    LD  R0,ZERO
+    LD  R0,ZERO     ;prepare to print zero
     OUT
     OUT
-    LD  R0,SPACE
+    LD  R0,SPACE    ;prepare to print sapces
     OUT
       
 BRnzp END_PRINT_SLOT        ;register restore
