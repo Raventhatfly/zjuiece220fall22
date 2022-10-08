@@ -1,5 +1,10 @@
 .ORIG   x3000
 ; Initialise the array at x4000
+
+; REGISTER USE (registers have multiple uses in different parts of code):
+;   R1 - pointer to the current address the array  
+;   R2 - ascii value of NULL(x0000)
+;   R3 - slot iterator
     LD      R1,ARRAY
     LD      R2,NULL
     LD      R3,SLOT_NUMBER
@@ -9,8 +14,12 @@ MAIN_LOOP1      ; clear the location beginning at x4000
     ADD     R3,R3,#-1
     BRp     MAIN_LOOP1
 
-; read event list
-
+;Translation
+; REGISTER USE (registers have multiple uses in different parts of code):
+;   R0 - character ascii register / iterator
+;   R1 - pointer to the current address the event list starting at x5000 
+;   R2 - current character ascii
+;   R3 - the first adress of each event
     LD      R1,EVENT_LIST
     RETURN1
     ADD     R3,R1,#0        ; R3 points to the first character, copy the first value of R1
@@ -22,7 +31,15 @@ MAIN_LOOP1      ; clear the location beginning at x4000
     BR      MAIN_LOOP2
 
 END_FILLING
-    
+
+;Printing
+; REGISTER USE (registers have multiple uses in different parts of code):
+;   R0 - character ascii register / iterator
+;   R1 - pointer to the current address the event list starting at x5000 
+;   R2 - current character ascii
+;   R3 - week days iterator  
+;   R4 - store the number -16
+;   R5 - day time iterator / 
     
     ; printing the first line
 
@@ -66,7 +83,7 @@ MAIN_LOOP5
     LD      R2,ARRAY
     AND     R5,R5,#0        ; time iterator
     MAIN_LOOP4
-    LD      R0,SEPARATION
+    LD      R0,SEPARATION   ; "|"
     AND     R3,R3,#0
     ADD     R3,R3,#5        ; day iterator
     ADD     R1,R5,#0
@@ -173,14 +190,15 @@ JUDGE_INVALID_SLOT  ; determine if the schedule is valid
     JUDGE_INVALID_SLOT_TRUE
     ADD     R0,R3,#0
     PUTS
-    LEA      R0,INVALID_SLOT
+    LEA      R0,INVALID_SLOT    ; print error message
+    PUTS
     PUTS
     BR      END_PROGRAM
     
 CONFLICT_TRUE       ; determine case of conflicts
     ADD     R0,R3,#0
     PUTS
-    LEA     R0,CONFLICT
+    LEA     R0,CONFLICT    ; print error message
     PUTS
     BR      END_PROGRAM
 
