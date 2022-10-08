@@ -403,17 +403,96 @@ EXTRA_EVENT
     ST  R4,  EE_REG_4
     ST  R5,  EE_REG_4
     ST  R7,  EE_REG_7 
+    ; R1 contains the starting address of the origin
+    LD  R1,EE_ORIG
+    LD  R3,EE_STACK
+    AND R4,R4,#0
+    ADD R4,R4,#3
+EE_LOOP1            ; copy the first event into the stack---do not change R1,R3
+    LDR R2,R1,#0    ; R2 contains the content in the current location in the extra event list
+    STR R2,R3,#0
+    ADD R1,R1,#1
+    ADD R3,R3,#1
+    LDR R2,R1,#0
+    ADD R4,R4,#-1
+    BRnp EE_LOOP1
+; selct time slot
+
+    AND R0,R0,#0    ; R0 is the 15 kinds of time iterator
+    ADD R0,R0,#-1   ; starting at -1, so after the first loop gives 0
+    ADD R3,R3,#-1
+    LDR R2,R3,#0
+    AND R5,R5,#0
+    ADD R5,R5,#1    ; R5 is the bit mask
+EE_LOOP2
+    ADD R0,R0,#1    ;
+    AND R6,R5,R2
+    BRnp TAKE_TIME  ; there is available time
+    ADD R5,R5,R5
+    BRz NO_SPARE_TIME ;if the run out of bit mask(R5=0) then finish time select
+    BR  EE_LOOP2
+    TAKE_TIME
+    ; if this time exist then take this time
+    ADD R0,R0,#7
+    STR R6,R3,#0    ; mask the time slot so if this time is not compatible it will never search this time
+    ST  R0,EE_SELECT_TIME       ; the time selected is stored in an address because we are out of registers
+
+
+; weekdays
+    AND R0,R0,#0    ; R0 is the 5 days of time iterator
+    ADD R3,R3,#-1
+    LDR R2,R3,#0
+    AND R5,R5,#0
+    ADD R5,R5,#1    ; R5 is the bit mask
+EE_LOOP3
+    ADD R0,R0,#1
+    AND R6,R5,R2
+    BRnp EE_SEARCHDAY
+    EE_SEARCHDAY_RET
+    ADD R5,R5,R5
+    BRnzp    EE_LOOP3
+
+
+
+EE_SEARCHDAY        ; check if schedule is available
+    LD  R6,EE_SELECT_TIME   ;R6 now contain the time slot, R0 contian the day 
+    ADD R0,R0,#-1           ; R0 is now day-1
+    ; what we now need to do is calculate location in the array starting at x4000
+    LD  R4,EE_ARRAY
+    ADD R6,R6,#-7   ;reduce it to the original value
+    AND R0,R0,#0
+    ADD R0,R0,#5    ; 5 days
+    EE_LOOP4
+    ADD R6,R6,#-1   
+    BRn EE_SKIP1
+    ADD R4,R4,R0
+    BR EE_LOOP4
+    EE_SKIP1
+    ADD R4,R4,R0    ; we have found the location, ready to fill in numbers
+
+    LDR R0,R4,#0
+    BRnp    INVALID_TIME_SLOT       ; this space is already filled!
+    ; if this space is not filled, we can fill it
+    
+
+    ADD R2,R3,#0    ; get the pointer address of the main stack, the pointer is on the weekdays now
+    ADD R2,R2,#-1
+    LDR R6,R2,#0    ; first address of the event is put to R6
+    STR R6,R4,#0    
+    
+
+    
+
+    
 
 
 
 
+BR EE_SEARCHDAY_RET
 
-
-
-
-
-
-
+NO_SPARE_TIME
+    
+   
     LD  R0,  EE_REG_0
     LD  R1,  EE_REG_1
     LD  R2,  EE_REG_2 
@@ -422,6 +501,11 @@ EXTRA_EVENT
     LD  R5,  EE_REG_4
     LD  R7,  EE_REG_7 
 RET
+EE_ARRAY  .FILL   x4000
+EE_ORIG   .FILL   x6000
+EE_STACK  .FILL   x8000
+EE_SELECT_TIME      .BLKW   1
+EE_CLEAR_ARRAY_STACK    .BLKW   6       ; the first address is the stack pointer
 EE_REG_0  .BLKW   1
 EE_REG_1  .BLKW   1
 EE_REG_2  .BLKW   1
