@@ -51,44 +51,23 @@ END_FILLING
 ;   R3 - week days iterator  
 ;   R4 - store the number -16
 ;   R5 - day time iterator / 
-    
-    ; printing the first line
-
-    ;to be deleted here
-    ; LEA     R1,NULL
-    ; JSR     PRINT_CENTERED
-    ; LD      R0,SEPARATION
-    ; OUT
-    ; LEA     R1,MON
-    ; JSR     PRINT_CENTERED
-    ; OUT
-    ; LEA     R1,TUE
-    ; JSR     PRINT_CENTERED
-    ; OUT
-    ; LEA     R1,WED
-    ; JSR     PRINT_CENTERED
-    ; OUT
-    ; LEA     R1,THU
-    ; JSR     PRINT_CENTERED
-    ; OUT
-    ; LEA     R1,FRI
-    ; JSR     PRINT_CENTERED
-    ; LD      R0,NL
-    ; OUT
 
     LEA     R1,NULL     ; starts printing the timetable from here
     JSR     PRINT_CENTERED
     LD      R0,SEPARATION
     OUT     
     AND     R2,R2,#0
-    ADD     R2,R2,#5    ; iterator for the 5 days of the week
+    ADD     R2,R2,#4    ; iterator for the 4 days of the week，last day don't have a vertical line so need another case
     LEA     R1,MON
 MAIN_LOOP5
     JSR     PRINT_CENTERED
     OUT
-    ADD     R1,R1,#1
-    ADD     R2,R2,#-1
-    BRnp    MAIN_LOOP5      
+    ADD     R1,R1,#4    ; every week day has three characters and a NULL
+    ADD     R2,R2,#-1   ; decrease the number of weekdays to be printed
+    BRnp    MAIN_LOOP5
+    JSR     PRINT_CENTERED
+    LD      R0,NL
+    OUT      
 
     ; print rest of the lines
     LD      R2,ARRAY        ; R2 points to the current address of the array
@@ -102,7 +81,7 @@ MAIN_LOOP5
     MAIN_LOOP3
     OUT
     LDR     R1,R2,#0
-    BRnp    SKIP1
+    BRnp    SKIP1           ; judge if the location is full
     LEA     R1,NULL
     SKIP1   
     JSR     PRINT_CENTERED  
@@ -175,9 +154,9 @@ HANDEL  ; find the slot pointer of the character
     HANDEL_STORE_LOOP
     ADD     R0,R0,R4
     ADD     R6,R6,#-1
-    BRzp     HANDEL_STORE_LOOP     
+    BRzp     HANDEL_STORE_LOOP     ; go to handel store process
     ADD     R0,R0,R5
-    LD      R6,ARRAY
+    LD      R6,ARRAY        ; laod the value into the array
     ADD     R0,R0,R6
     ; check if the content in location R0 is empty
     LDR     R6,R0,#0
@@ -224,7 +203,7 @@ CONFLICT_TRUE       ; determine case of conflicts
 
 PRINT_SLOT
 
-    ST  R0,  PS_REG_0
+    ST  R0,  PS_REG_0   ;store registers
     ST  R2,  PS_REG_2   
     ST  R7,  PS_REG_7 
     ADD R2,R1,#7
@@ -261,13 +240,13 @@ PS_RRE_RETURN ;prepare to return
     LD  R0,SPACE
     OUT
       
-BRnzp END_PRINT_SLOT
+BRnzp END_PRINT_SLOT        ;register restore
 PS_REG_0  .BLKW   1
 PS_REG_2  .BLKW   1
 PS_REG_7  .BLKW   1
-COL       .FILL   x3a
-SPACE     .FILL   x20
-ZERO      .FILL   x30
+COL       .FILL   x3a       ;colons
+SPACE     .FILL   x20       ;spaces
+ZERO      .FILL   x30       ;ascii zero
 
 END_PRINT_SLOT 
     LD  R0, PS_REG_0 
