@@ -395,5 +395,39 @@ END_PRINT_CENTERED
     LD  R7,  PC_REG_7 
     RET
 
+EXTRA_EVENT
+    ST  R0,  EE_REG_0
+    ST  R1,  EE_REG_1
+    ST  R2,  EE_REG_2 
+    ST  R3,  EE_REG_3
+    ST  R4,  EE_REG_4
+    ST  R5,  EE_REG_4
+    ST  R7,  EE_REG_7 
+
+
+
+
+
+
+
+
+
+
+
+    LD  R0,  EE_REG_0
+    LD  R1,  EE_REG_1
+    LD  R2,  EE_REG_2 
+    LD  R3,  EE_REG_3
+    LD  R4,  EE_REG_4
+    LD  R5,  EE_REG_4
+    LD  R7,  EE_REG_7 
+RET
+EE_REG_0  .BLKW   1
+EE_REG_1  .BLKW   1
+EE_REG_2  .BLKW   1
+EE_REG_3  .BLKW   1
+EE_REG_4  .BLKW   1
+EE_REG_5  .BLKW   1
+EE_REG_7  .BLKW   1
 
 .END
