@@ -1,6 +1,17 @@
 .ORIG   x3000
 ; Initialise the array at x4000
 
+; mp2.asm
+; in this program, it translate events with variable-length into a schedule with fixed-length fields.
+; The first step is to initialize the schedule starting from x4000 to x404F. 
+; The second step is translating, which is to read the event starting from x5000 and store 
+; them on the table initialisied by the first step.
+; After translation, the program prints with day names on the top and hour names on the left.
+; The event list starts at address x5000 in LC-3 memory.
+; mp2.asm uses to subroutines, PRINT_CENTERED and PRINT_SLOT
+
+
+; Initialization
 ; REGISTER USE (registers have multiple uses in different parts of code):
 ;   R1 - pointer to the current address the array  
 ;   R2 - ascii value of NULL(x0000)
@@ -155,11 +166,7 @@ HANDEL  ; find the slot pointer of the character
     BRz     END_FILLING    ; if next location is NULL, this means that the initialization is over
     BR      RETURN1
     
-    HANDEL_STORE
-    ; TODO: to be finished, I just need to put the address of R3 in to the array
-    ; R3 is the initial address of characters
-    ; R4 is the current time
-    ; Do not change R1, R2, R5
+    HANDEL_STORE            ; this part stores the current event into the array 
 
     AND     R6,R6,#0
     AND     R0,R0,#0
@@ -198,7 +205,7 @@ JUDGE_INVALID_SLOT  ; determine if the schedule is valid
 CONFLICT_TRUE       ; determine case of conflicts
     ADD     R0,R3,#0
     PUTS
-    LEA     R0,CONFLICT    ; print error message
+    LEA     R0,CONFLICT    ; print error message conflict
     PUTS
     BR      END_PROGRAM
 
