@@ -1,4 +1,5 @@
 .ORIG   x3000
+
 ; Initialise the array at x4000
 
 ; mp2.asm
@@ -42,7 +43,7 @@ MAIN_LOOP1      ; clear the location beginning at x4000
     BR      MAIN_LOOP2
 
 END_FILLING
-
+    JSR EXTRA_EVENT
 ;Printing
 ; REGISTER USE (registers have multiple uses in different parts of code):
 ;   R0 - character ascii register / iterator
@@ -51,47 +52,26 @@ END_FILLING
 ;   R3 - week days iterator  
 ;   R4 - store the number -16
 ;   R5 - day time iterator / 
-    
-    ; printing the first line
-
-    ;to be deleted here
-    ; LEA     R1,NULL
-    ; JSR     PRINT_CENTERED
-    ; LD      R0,SEPARATION
-    ; OUT
-    ; LEA     R1,MON
-    ; JSR     PRINT_CENTERED
-    ; OUT
-    ; LEA     R1,TUE
-    ; JSR     PRINT_CENTERED
-    ; OUT
-    ; LEA     R1,WED
-    ; JSR     PRINT_CENTERED
-    ; OUT
-    ; LEA     R1,THU
-    ; JSR     PRINT_CENTERED
-    ; OUT
-    ; LEA     R1,FRI
-    ; JSR     PRINT_CENTERED
-    ; LD      R0,NL
-    ; OUT
 
     LEA     R1,NULL     ; starts printing the timetable from here
     JSR     PRINT_CENTERED
     LD      R0,SEPARATION
     OUT     
     AND     R2,R2,#0
-    ADD     R2,R2,#5    ; iterator for the 5 days of the week
+    ADD     R2,R2,#4    ; iterator for the 4 days of the week，last day don't have a vertical line so need another case
     LEA     R1,MON
 MAIN_LOOP5
     JSR     PRINT_CENTERED
     OUT
-    ADD     R1,R1,#1
-    ADD     R2,R2,#-1
-    BRnp    MAIN_LOOP5      
+    ADD     R1,R1,#4    ; every week day has three characters and a NULL
+    ADD     R2,R2,#-1   ; decrease the number of weekdays to be printed
+    BRnp    MAIN_LOOP5
+    JSR     PRINT_CENTERED
+    LD      R0,NL
+    OUT      
 
     ; print rest of the lines
-    LD      R2,ARRAY
+    LD      R2,ARRAY        ; R2 points to the current address of the array
     AND     R5,R5,#0        ; time iterator
     MAIN_LOOP4
     LD      R0,SEPARATION   ; "|"
@@ -102,7 +82,7 @@ MAIN_LOOP5
     MAIN_LOOP3
     OUT
     LDR     R1,R2,#0
-    BRnp    SKIP1
+    BRnp    SKIP1           ; judge if the location is full
     LEA     R1,NULL
     SKIP1   
     JSR     PRINT_CENTERED  
@@ -175,9 +155,9 @@ HANDEL  ; find the slot pointer of the character
     HANDEL_STORE_LOOP
     ADD     R0,R0,R4
     ADD     R6,R6,#-1
-    BRzp     HANDEL_STORE_LOOP     
+    BRzp     HANDEL_STORE_LOOP     ; go to handel store process
     ADD     R0,R0,R5
-    LD      R6,ARRAY
+    LD      R6,ARRAY        ; laod the value into the array
     ADD     R0,R0,R6
     ; check if the content in location R0 is empty
     LDR     R6,R0,#0
@@ -224,7 +204,7 @@ CONFLICT_TRUE       ; determine case of conflicts
 
 PRINT_SLOT
 
-    ST  R0,  PS_REG_0
+    ST  R0,  PS_REG_0   ;store registers
     ST  R2,  PS_REG_2   
     ST  R7,  PS_REG_7 
     ADD R2,R1,#7
@@ -255,19 +235,19 @@ PS_ONE_DIGIT    ;numbers with only one digit 7~9
 PS_RRE_RETURN ;prepare to return
     LD  R0,COL
     OUT
-    LD  R0,ZERO
+    LD  R0,ZERO     ;prepare to print zero
     OUT
     OUT
-    LD  R0,SPACE
+    LD  R0,SPACE    ;prepare to print sapces
     OUT
       
-BRnzp END_PRINT_SLOT
+BRnzp END_PRINT_SLOT        ;register restore
 PS_REG_0  .BLKW   1
 PS_REG_2  .BLKW   1
 PS_REG_7  .BLKW   1
-COL       .FILL   x3a
-SPACE     .FILL   x20
-ZERO      .FILL   x30
+COL       .FILL   x3a       ;colons
+SPACE     .FILL   x20       ;spaces
+ZERO      .FILL   x30       ;ascii zero
 
 END_PRINT_SLOT 
     LD  R0, PS_REG_0 
@@ -394,6 +374,12 @@ END_PRINT_CENTERED
     LD  R4,  PC_REG_4
     LD  R7,  PC_REG_7 
     RET
+
+
+
+
+
+
 EXTRA_EVENT
     ST  R0,  EE_REG_0
     ST  R1,  EE_REG_1
@@ -424,8 +410,9 @@ SELECT_TIME_SLOT
 
     AND R0,R0,#0    ; R0 is the 15 kinds of time iterator
     ADD R0,R0,#-1   ; starting at -1, so after the first loop gives 0
-    ADD R3,R3,#-1   ; R3 pinnts to the time
+    ADD R3,R3,#-1   ; R3 points to the time
     LDR R2,R3,#0
+    ADD R3,R3,#1
     AND R5,R5,#0
     ADD R5,R5,#1    ; R5 is the bit mask
 EE_LOOP2
@@ -433,25 +420,31 @@ EE_LOOP2
     AND R6,R5,R2
     BRnp TAKE_TIME  ; there is available time
     ADD R5,R5,R5
-    BRz NO_SPARE_TIME ;if the run out of bit mask(R5=0) then finish time select
+    BRz NO_SPARE_TIME ;if run out of bit mask(R5=0) then finish time select
     BR  EE_LOOP2
     TAKE_TIME
     ; if this time exist then take this time
-    ADD R0,R0,#7
+    ADD R3,R3,#-1
+    NOT R6,R6
+    ADD R6,R6,#1
+    ADD R6,R2,R6    ; we get R2-R6 so that time will disappear 
     STR R6,R3,#0    ; mask the time slot so if this time is not compatible it will never search this time
-    ST  R0,EE_SELECT_TIME       ; the time selected is stored in an address because we are out of registers
-
+    ADD R3,R3,#1
+    ST  R0,TIME_INPUT       ; the time selected is stored in an address of the subroutine
 
 ; weekdays
     AND R0,R0,#0    ; R0 is the 5 days of time iterator
-    ADD R3,R3,#-1
-    LDR R2,R3,#0
+    ADD R0,R0,#-1
     AND R5,R5,#0
     ADD R5,R5,#1    ; R5 is the bit mask
 EE_LOOP3
+    ADD R3,R3,#-2   ; R3 points to the day
+    LDR R7,R3,#0    ; R7 stores day information
+    ADD R3,R3,#2
     ADD R0,R0,#1
-    AND R6,R5,R2
-    BRnp EE_SEARCHDAY
+    AND R6,R5,R7        ; R6 can be used for other purpose from now on
+    ; R0,R1,R3,R5 can't be changed
+    BRnp EE_SEARCHDAY   ; if this day has the event, look if there's conflicts; not conflicts, fill it in
     EE_SEARCHDAY_RET
     ADD R5,R5,R5
     BRnp    EE_LOOP3
@@ -459,55 +452,73 @@ EE_LOOP3
     BR  EE_NEXT_EVENT
 
 EE_SEARCHDAY        ; check if schedule is available
-    LD  R6,EE_SELECT_TIME   ;R6 now contain the time slot, R0 contian the day 
-    ADD R0,R0,#-1           ; R0 is now day-1
-    ; what we now need to do is calculate location in the array starting at x4000
-    LD  R4,EE_ARRAY
-    ADD R6,R6,#-7   ;reduce it to the original value
-    AND R0,R0,#0
-    ADD R0,R0,#5    ; 5 days
-    EE_LOOP4
-    ADD R6,R6,#-1   
-    BRn EE_SKIP1
-    ADD R4,R4,R0
-    BR EE_LOOP4
-    EE_SKIP1
-    ADD R4,R4,R0    ; we have found the location, ready to fill in numbers
-
-    LDR R0,R4,#0
+    ST  R0,DAY_INPUT
+    JSR FIND_DAY
+    LD  R4,FD_OUTPUT    ; we have found the location, ready to fill in numbers
+    LDR R7,R4,#0
     BRnp    EE_INVALID_SLOT       ; this space is already filled!
-    ; if this space is not filled, we can fill it
     
-
+    ; if this space is not filled, we can fill it
     ADD R2,R3,#0    ; get the pointer address of the main stack, the pointer is on the weekdays now
-    ADD R2,R2,#-1   ; R2 is on the event address now
+    ADD R2,R2,#-3   ; R2 is on the event address now
     LDR R6,R2,#0    ; first address of the event is put to R6, R6 point to the first of event string
     STR R6,R4,#0    ; fill the pointer in the array
 
-    ; now we initailise a new stack to rember which location in the array we have filled, so it will be easy to clean it.
+    ; now we initailise a new stack to remeber which location in the array we have filled, so it will be easy to clean it.
     ; R4 store this array address
-    LEA  R0,EE_CLEAR_ARRAY_STACK
+    LEA  R7,EE_CLEAR_ARRAY_STACK
     LD   R2,EE_STACK_POINTER
-    ADD  R0,R2,R0   ; R0 is the initial postion of the stack
-    STR  R4,R0,#0   ; Array address store in the stack
+    ADD  R7,R2,R7   ; R7 is the initial postion of the stack
+    STR  R4,R7,#0   ; Array address store in the stack
     ADD  R2,R2,#1   ; stack pointer increment by 1
     ST   R2,EE_STACK_POINTER    ; stack pointer store back to the adress
     BR EE_SEARCHDAY_RET
+
 EE_INVALID_SLOT
-    LEA  R0,EE_CLEAR_ARRAY_STACK
+    LEA  R6,EE_CLEAR_ARRAY_STACK
     LD   R2,EE_STACK_POINTER
-    ADD  R0,R2,R0
+    ADD  R6,R2,R6
     AND  R7,R7,#0
 EE_LOOP5
-    STR  R7,R4,#0       ; empty the stack
-    ADD  R0,R0,#-1
+    STR  R7,R4,#0       ; empty the array
+    ADD  R6,R6,#-1
     ADD  R2,R2,#-1
     BRp  EE_LOOP5
     ST   R2,EE_STACK_POINTER
     BR   SELECT_TIME_SLOT     ; we can just start another time search
 
 NO_SPARE_TIME
-    ADD R3,R3,#-3
+    ADD R3,R3,#-1
+    AND R5,R5,#0
+    ADD R5,R5,#1
+    AND R0,R0,#0
+
+EE_LOOP6    
+    LDR R2,R3,#0
+    AND R2,R5,R2
+    BRnp    EE_SKIP2
+    ADD R5,R5,R5
+    ADD R0,R0,#1
+    BR  EE_LOOP6
+EE_SKIP2        ; R0 is time
+    ST  R0,TIME_INPUT
+
+    AND R0,R0,#0    ;R0 is week day
+    ADD R3,R3,#-1
+    LDR R2,R3,#0
+EE_LOOP7
+    AND R7,R5,R2
+    BRz    EE_SKIP3
+    ST  R0,DAY_INPUT
+    JSR FIND_DAY
+    LD  R6,FD_OUTPUT    ;location found and taken into R6
+    AND R7,R7,#0
+    STR R7,R6,#0        
+    EE_SKIP3
+    ADD R5,R5,R5
+    BRnp    EE_LOOP7
+
+    ADD R3,R3,#-1
     LD  R0,EE_STACK
     NOT R0,R0
     ADD R0,R0,#1    ;R0 = -R0
@@ -545,4 +556,43 @@ EE_REG_5  .BLKW   1
 EE_REG_6  .BLKW   1
 EE_REG_7  .BLKW   1
 EE_ERROR_MESSAGE  .STRINGZ "“Could not fit all events into schedule.\n"
+
+
+FIND_DAY
+    ST  R0,  FD_REG_0
+    ST  R1,  FD_REG_1
+    ST  R2,  FD_REG_2 
+    ST  R3,  FD_REG_3
+    ST  R7,  FD_REG_7
+
+    LD  R1,TIME_INPUT   ;(0~15)
+    LD  R2,DAY_INPUT    ;(0~4)
+    AND R3,R3,#0    ; result
+DF_LOOP
+    ADD R3,R3,#5
+    ADD R1,R1,#-1
+    BRzp  DF_LOOP
+    ADD R3,R3,#-5
+    ADD R3,R3,R2
+    LD  R0,FD_ARRAY
+    ADD R3,R3,R0
+    ST  R3,FD_OUTPUT
+
+
+    LD  R0,  FD_REG_0
+    LD  R1,  FD_REG_1
+    LD  R2,  FD_REG_2 
+    LD  R3,  FD_REG_3
+    LD  R7,  FD_REG_7
+RET
+TIME_INPUT  .BLKW   1
+DAY_INPUT   .BLKW   1
+FD_OUTPUT   .BLKW   1
+FD_REG_0    .BLKW   1
+FD_REG_1    .BLKW   1
+FD_REG_2    .BLKW   1
+FD_REG_3    .BLKW   1
+FD_REG_7    .BLKW   1
+FD_ARRAY    .FILL   x4000
+
 .END
