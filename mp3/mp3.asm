@@ -424,7 +424,7 @@ SELECT_TIME_SLOT
 
     AND R0,R0,#0    ; R0 is the 15 kinds of time iterator
     ADD R0,R0,#-1   ; starting at -1, so after the first loop gives 0
-    ADD R3,R3,#-1
+    ADD R3,R3,#-1   ; R3 pinnts to the time
     LDR R2,R3,#0
     AND R5,R5,#0
     ADD R5,R5,#1    ; R5 is the bit mask
@@ -455,7 +455,9 @@ EE_LOOP3
     EE_SEARCHDAY_RET
     ADD R5,R5,R5
     BRnp    EE_LOOP3
-    
+    ; weekday exhausted
+    BR  EE_NEXT_EVENT
+
 EE_SEARCHDAY        ; check if schedule is available
     LD  R6,EE_SELECT_TIME   ;R6 now contain the time slot, R0 contian the day 
     ADD R0,R0,#-1           ; R0 is now day-1
