@@ -394,14 +394,14 @@ END_PRINT_CENTERED
     LD  R4,  PC_REG_4
     LD  R7,  PC_REG_7 
     RET
-
 EXTRA_EVENT
     ST  R0,  EE_REG_0
     ST  R1,  EE_REG_1
     ST  R2,  EE_REG_2 
     ST  R3,  EE_REG_3
     ST  R4,  EE_REG_4
-    ST  R5,  EE_REG_4
+    ST  R5,  EE_REG_5
+    ST  R6,  EE_REG_6
     ST  R7,  EE_REG_7 
     ; R1 contains the starting address of the origin
     LD  R1,EE_ORIG
@@ -513,7 +513,7 @@ NO_SPARE_TIME
     ADD R0,R0,#1    ;R0 = -R0
     ADD R0,R3,R0    ;R0 = R3-R0
     BRz EE_ERROR    ; the stack is empty, which means that can not be fullfilled and no solution for the search
-    BR  EE_NEXT_EVENT; jump to the location to take the next thing in the list
+    BR  EE_NEXT_EVENT   ; jump to the location to take the next thing in the list
 
 EE_ERROR
     LEA R0,EE_ERROR_MESSAGE
@@ -526,7 +526,8 @@ EE_PREP_RET
     LD  R2,  EE_REG_2 
     LD  R3,  EE_REG_3
     LD  R4,  EE_REG_4
-    LD  R5,  EE_REG_4
+    LD  R5,  EE_REG_5
+    LD  R6,  EE_REG_6
     LD  R7,  EE_REG_7 
 RET
 EE_ARRAY  .FILL   x4000
@@ -541,6 +542,7 @@ EE_REG_2  .BLKW   1
 EE_REG_3  .BLKW   1
 EE_REG_4  .BLKW   1
 EE_REG_5  .BLKW   1
+EE_REG_6  .BLKW   1
 EE_REG_7  .BLKW   1
 EE_ERROR_MESSAGE  .STRINGZ "“Could not fit all events into schedule.\n"
 .END
