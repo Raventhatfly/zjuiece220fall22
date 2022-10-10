@@ -380,6 +380,23 @@ END_PRINT_CENTERED
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 EXTRA_EVENT
     ST  R0,  EE_REG_0
     ST  R1,  EE_REG_1
@@ -393,7 +410,19 @@ EXTRA_EVENT
     LD  R1,EE_ORIG
     LD  R3,EE_STACK
 
-EE_NEXT_EVENT    
+EE_NEXT_EVENT 
+    ; stack initialise
+    AND R4,R4,#0
+    
+    LEA R2,EE_CLEAR_ARRAY_STACK
+    STR R4,R2,#0
+
+    ; ADD R4,R4,#1
+    LEA R2,EE_STACK_POINTER
+    STR R4,R2,#0
+
+
+
     AND R4,R4,#0
     ADD R4,R4,#3    ; the stack structrure I design have three address
 EE_LOOP1            ; copy the event into the stack---do not change R1,R3
@@ -404,15 +433,19 @@ EE_LOOP1            ; copy the event into the stack---do not change R1,R3
     ADD R3,R3,#1
     ADD R4,R4,#-1   ; copy three times 
     BRnp EE_LOOP1
+    AND R5,R5,#0
+    ADD R5,R5,#-1
+    STR R5,R3,#0
+    ADD R3,R3,#1
 
 SELECT_TIME_SLOT
 ; selct time slot
 
     AND R0,R0,#0    ; R0 is the 15 kinds of time iterator
     ADD R0,R0,#-1   ; starting at -1, so after the first loop gives 0
-    ADD R3,R3,#-1   ; R3 points to the time
+    ADD R3,R3,#-2   ; R3 points to the time
     LDR R2,R3,#0
-    ADD R3,R3,#1
+    ADD R3,R3,#2
     AND R5,R5,#0
     ADD R5,R5,#1    ; R5 is the bit mask
 EE_LOOP2
@@ -424,12 +457,16 @@ EE_LOOP2
     BR  EE_LOOP2
     TAKE_TIME
     ; if this time exist then take this time
-    ADD R3,R3,#-1
+    ADD R3,R3,#-2
     NOT R6,R6
     ADD R6,R6,#1
     ADD R6,R2,R6    ; we get R2-R6 so that time will disappear 
     STR R6,R3,#0    ; mask the time slot so if this time is not compatible it will never search this time
-    ADD R3,R3,#1
+    ADD R3,R3,#2
+    ST  R0,EE_SELECT_TIME
+    ; ADD R3,R3,#-1   ;points to the current day 
+    ; STR R0,R3,#0    ; store the time
+    ; ADD R3,R3,#1
     ST  R0,TIME_INPUT       ; the time selected is stored in an address of the subroutine
 
 ; weekdays
@@ -438,9 +475,9 @@ EE_LOOP2
     AND R5,R5,#0
     ADD R5,R5,#1    ; R5 is the bit mask
 EE_LOOP3
-    ADD R3,R3,#-2   ; R3 points to the day
+    ADD R3,R3,#-3   ; R3 points to the day
     LDR R7,R3,#0    ; R7 stores day information
-    ADD R3,R3,#2
+    ADD R3,R3,#3
     ADD R0,R0,#1
     AND R6,R5,R7        ; R6 can be used for other purpose from now on
     ; R0,R1,R3,R5 can't be changed
@@ -449,6 +486,10 @@ EE_LOOP3
     ADD R5,R5,R5
     BRnp    EE_LOOP3
     ; weekday exhausted
+    LD  R0,EE_SELECT_TIME
+    ADD R3,R3,#-1   ;points to the current day 
+    STR R0,R3,#0    ; store the time
+    ADD R3,R3,#1
     BR  EE_NEXT_EVENT
 
 EE_SEARCHDAY        ; check if schedule is available
@@ -460,7 +501,7 @@ EE_SEARCHDAY        ; check if schedule is available
     
     ; if this space is not filled, we can fill it
     ADD R2,R3,#0    ; get the pointer address of the main stack, the pointer is on the weekdays now
-    ADD R2,R2,#-3   ; R2 is on the event address now
+    ADD R2,R2,#-4   ; R2 is on the event address now
     LDR R6,R2,#0    ; first address of the event is put to R6, R6 point to the first of event string
     STR R6,R4,#0    ; fill the pointer in the array
 
@@ -477,35 +518,53 @@ EE_SEARCHDAY        ; check if schedule is available
 EE_INVALID_SLOT
     LEA  R6,EE_CLEAR_ARRAY_STACK
     LD   R2,EE_STACK_POINTER
+    BRz  EE_SKIP_4
     ADD  R6,R2,R6
     AND  R7,R7,#0
 EE_LOOP5
-    STR  R7,R4,#0       ; empty the array
+    STR  R7,R6,#0       ; empty the stack, can be deleted anyway
     ADD  R6,R6,#-1
+    LDR  R4,R6,#0
+    STR  R7,R4,#0
     ADD  R2,R2,#-1
-    BRp  EE_LOOP5
+    BRp EE_LOOP5
+    EE_SKIP_4
     ST   R2,EE_STACK_POINTER
     BR   SELECT_TIME_SLOT     ; we can just start another time search
 
 NO_SPARE_TIME
-    ADD R3,R3,#-1
+
+    AND R4,R4,#0
+    ADD R4,R4,#2
+
+    EE_CLEAR
+    ADD R3,R3,#-1   ; current day
+;     AND R5,R5,#0
+;     ADD R5,R5,#1
+;     AND R0,R0,#0
+
+; EE_LOOP6    
+;     LDR R2,R3,#0
+;     AND R2,R5,R2
+;     BRnp    EE_SKIP2
+;     ADD R5,R5,R5
+;     BRz     EE_SKIP4
+;     ADD R0,R0,#1
+;     BR  EE_LOOP6
+    
+    LDR R0,R3,#0
+    BRn EE_SKIP6    ; if R0 contains xffff, this means that no time taken for the event
+    ADD R3,R3,#-1   ; current time
+;EE_SKIP2        ; R0 is time
+    
+    
+
+    ST  R0,TIME_INPUT
+    AND R0,R0,#0    ;R0 is week day
+    ADD R3,R3,#-1   ; week days
+    LDR R2,R3,#0
     AND R5,R5,#0
     ADD R5,R5,#1
-    AND R0,R0,#0
-
-EE_LOOP6    
-    LDR R2,R3,#0
-    AND R2,R5,R2
-    BRnp    EE_SKIP2
-    ADD R5,R5,R5
-    ADD R0,R0,#1
-    BR  EE_LOOP6
-EE_SKIP2        ; R0 is time
-    ST  R0,TIME_INPUT
-
-    AND R0,R0,#0    ;R0 is week day
-    ADD R3,R3,#-1
-    LDR R2,R3,#0
 EE_LOOP7
     AND R7,R5,R2
     BRz    EE_SKIP3
@@ -515,16 +574,42 @@ EE_LOOP7
     AND R7,R7,#0
     STR R7,R6,#0        
     EE_SKIP3
+    ADD R0,R0,#1
     ADD R5,R5,R5
     BRnp    EE_LOOP7
+    
+; EE_SKIP4
+;     ADD R3,R3,#-1
 
     ADD R3,R3,#-1
+
+  
+    
+    ADD R4,R4,#-1
+    BRp EE_CLEAR
+
+    ADD R1,R1,#-3
+    ADD R3,R3,#4
+
     LD  R0,EE_STACK
     NOT R0,R0
     ADD R0,R0,#1    ;R0 = -R0
     ADD R0,R3,R0    ;R0 = R3-R0
     BRz EE_ERROR    ; the stack is empty, which means that can not be fullfilled and no solution for the search
-    BR  EE_NEXT_EVENT   ; jump to the location to take the next thing in the list
+
+    ; stack initialization: copied from above
+    AND R4,R4,#0
+    LEA R2,EE_CLEAR_ARRAY_STACK
+    STR R4,R2,#0
+    ; ADD R4,R4,#1
+    LEA R2,EE_STACK_POINTER
+    STR R4,R2,#0
+    BR SELECT_TIME_SLOT
+    ;BR   EE_NEXT_EVENT ; jump to the location to take the next thing in the list
+EE_SKIP6
+    ADD R3,R3,#-3
+    ADD R4,R4,#-1
+    BR EE_CLEAR
 
 EE_ERROR
     LEA R0,EE_ERROR_MESSAGE
@@ -555,7 +640,7 @@ EE_REG_4  .BLKW   1
 EE_REG_5  .BLKW   1
 EE_REG_6  .BLKW   1
 EE_REG_7  .BLKW   1
-EE_ERROR_MESSAGE  .STRINGZ "“Could not fit all events into schedule.\n"
+EE_ERROR_MESSAGE  .STRINGZ "Could not fit all events into schedule.\n"
 
 
 FIND_DAY
