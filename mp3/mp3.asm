@@ -147,7 +147,7 @@ HANDEL  ; find the slot pointer of the character
     ADD     R2,R2,R2
     HANDEL_LOOP1
     ADD     R2,R2,R2    ; Now the current day digit is on the first digit
-    BRn     HANDEL_STORE          ; if this is the day of the event, store to the characters to the location of the pointer
+    BRn     HANDEL_STORE   ; if this is the day of the event, store to the characters to the location of the pointer
     HANDEL_RETURN1
     ADD     R5,R5,#-1   ; decrement day of the week
     BRzp    HANDEL_LOOP1
@@ -266,7 +266,7 @@ END_PRINT_SLOT
 RET
 ;end of PRINT_SLOT
 
-JUDGE_PRINT     .FILL   xFFFF       ; if this location turns 0 the program will not print the schedule
+JUDGE_PRINT     .FILL   xFFFF    ;location turns 0, not print the schedule
 
 ; PRINT_CENTERED -- Pass the location of the first character of a string to R1 
 ; and align the string at the middle of a proccessed string whose maximum value
@@ -398,8 +398,10 @@ END_PRINT_CENTERED
 ; EVENT STRUCTURE USED ON THE STACK
 ; The structure uses 4 addresses
 ; First Address: Pointer to the event, same as in the event list
-; Second Address: time to be taken, in the form of bits, the first 1 from the right implies the next time to be taken
-; the digit on the 0 position(the rightmost digit) represent 7:00 and so forth, resembling the event list
+; Second Address: time to be taken, in the form of bits, the first 1 from the right implies 
+; the next time to be taken
+; the digit on the 0 position(the rightmost digit) represent 7:00 and so forth, 
+; resembling the event list
 ; Third Address: Weekdays, same as in the event list
 ; Fourth Address: The current day taken, in the form of positive integers ranging from 0~15
 
@@ -426,9 +428,15 @@ EE_NEXT_EVENT
     STR R4,R2,#0
     AND R4,R4,#0
     ADD R4,R4,#3    
-EE_LOOP1            ; copy the event into the stack---do not change R1,R3
     LDR R2,R1,#0    ; R2 contains the content in the current location in the extra event list
     BRz EE_PREP_RET ; if R2 contains NULL, it means we are finished
+
+    AND R6,R6,#0    ; R6 is the skip event indicator
+
+EE_LOOP1            ; copy the event into the stack---do not change R1,R3
+    LDR R2,R1,#0    ; R2 contains the content in the current location in the extra event list
+    BRz EE_SKIP_EVENT    ; if R2 contains NULL, it means we should skip the event
+    EE_SKIP_EVENT_RET
     STR R2,R3,#0
     ADD R1,R1,#1
     ADD R3,R3,#1
@@ -436,8 +444,11 @@ EE_LOOP1            ; copy the event into the stack---do not change R1,R3
     BRnp EE_LOOP1
     AND R5,R5,#0    ; the fourth location of the stack structure
     ADD R5,R5,#-1
-    STR R5,R3,#0    ; initialise the current time as -1, if current time selected this will be a non-negative value
+    STR R5,R3,#0    ; initialise current time as -1, if current time selected this is non-negative
     ADD R3,R3,#1    ; next location on the stack
+
+    ADD R6,R6,#0    ;set CC
+    BRn EE_SKIP_EVENT_TRUE
 
 SELECT_TIME_SLOT
 ; selct time slot
@@ -462,7 +473,7 @@ EE_LOOP2
     NOT R6,R6
     ADD R6,R6,#1
     ADD R6,R2,R6    ; we get R2-R6 so that time will disappear 
-    STR R6,R3,#0    ; mask the time slot so if this time is not compatible it will never search this time
+    STR R6,R3,#0    ; mask the time slot, if this time is not compatible it will never search this time
     ADD R3,R3,#2
     ST  R0,EE_SELECT_TIME
     ST  R0,TIME_INPUT       ; the time selected is stored in an address of the subroutine
@@ -512,7 +523,13 @@ EE_SEARCHDAY        ; check if schedule is available
     ADD  R2,R2,#1   ; stack pointer increment by 1
     ST   R2,EE_STACK_POINTER    ; stack pointer store back to the adress
     BR EE_SEARCHDAY_RET
+EE_SKIP_EVENT
+    ADD R6,R6,#-1
+    BR  EE_SKIP_EVENT_RET
 
+EE_SKIP_EVENT_TRUE
+    ADD R3,R3,#-4
+    BR  EE_NEXT_EVENT
 EE_INVALID_SLOT
     LEA  R6,EE_CLEAR_ARRAY_STACK
     LD   R2,EE_STACK_POINTER
