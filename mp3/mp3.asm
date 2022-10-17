@@ -1,21 +1,32 @@
 .ORIG   x3000
 
-; Initialise the array at x4000
-
 ; mp3.asm
-; in this program, it translate events with variable-length into a schedule with fixed-length fields.
+; this program translates events with variable-length into a schedule with fixed-length fields.
 ; The first step is to initialize the schedule starting from x4000 to x404F. 
 ; The second step is translating, which is to read the event starting from x5000 and store 
 ; them on the table initialisied by the first step.
 ; The program loads an extra event and uses DFS search and a stack to determine if the extra event 
 ; can be filled into the time table.
-; All events will be filled in the possible earliest time slot if not conflicting with other schedule.
-; After loading the extra event, the program prints with day names on the top and hour names on the left.
+; All events will be filled in earliest time slot if not conflicting with other schedule.
+; After loading the extra event, the program prints with day names 
+; on the top and hour names on the left.
 ; If the extra event is loaded with confict, the program will print only error message.
 ; The event list starts at address x5000 in LC-3 memory.
 ; The extra event starts at address starting at x6000
 ; The main Stack starts at address starting at x8000 and grows towards bigger addresses.
-; mp3.asm uses to subroutines, PRINT_CENTERED, PRINT_SLOT, EXTRA_EVENT and FIND_DAY.
+; mp3.asm uses three subroutines, PRINT_CENTERED, PRINT_SLOT, EXTRA_EVENT and FIND_DAY.
+
+
+; EVENT STRUCTURE USED ON THE STACK
+; The structure uses 4 addresses
+; First Address: Pointer to the event, same as in the event list
+; Second Address: time to be taken, in the form of bits, the first 1 from the right implies 
+; the next time to be taken
+; the digit on the 0 position(the rightmost digit) represent 7:00 and so forth, 
+; resembling the event list
+; Third Address: Weekdays, same as in the event list
+; Fourth Address: The current day taken, in the form of positive integers ranging from 0~15
+
 
 
 ; Initialization
@@ -52,7 +63,7 @@ END_FILLING
     JSR EXTRA_EVENT         ; load extra event
 
     LD      R1,JUDGE_PRINT
-    BRz     END_PROGRAM     ;if that slot is zero, end the program, if slot is non zero, contine printing
+    BRz     END_PROGRAM     ;if that slot is zero, end the program, if slot nonzero contine printing
 
 ;Printing
 ; REGISTER USE (registers have multiple uses in different parts of code):
@@ -68,7 +79,7 @@ END_FILLING
     LD      R0,SEPARATION
     OUT     
     AND     R2,R2,#0
-    ADD     R2,R2,#4    ; iterator for the 4 days of the week，last day don't have a vertical line so need another case
+    ADD     R2,R2,#4    ; iterator for the 4 days of the week
     LEA     R1,MON
 MAIN_LOOP5
     JSR     PRINT_CENTERED
@@ -147,7 +158,7 @@ HANDEL  ; find the slot pointer of the character
     ADD     R2,R2,R2
     HANDEL_LOOP1
     ADD     R2,R2,R2    ; Now the current day digit is on the first digit
-    BRn     HANDEL_STORE   ; if this is the day of the event, store to the characters to the location of the pointer
+    BRn     HANDEL_STORE ; if the day of the event, store characters to the location of the pointer
     HANDEL_RETURN1
     ADD     R5,R5,#-1   ; decrement day of the week
     BRzp    HANDEL_LOOP1
@@ -473,7 +484,7 @@ EE_LOOP2
     NOT R6,R6
     ADD R6,R6,#1
     ADD R6,R2,R6    ; we get R2-R6 so that time will disappear 
-    STR R6,R3,#0    ; mask the time slot, if this time is not compatible it will never search this time
+    STR R6,R3,#0    ; mask the time slot, if time not compatible it will never search this time
     ADD R3,R3,#2
     ST  R0,EE_SELECT_TIME
     ST  R0,TIME_INPUT       ; the time selected is stored in an address of the subroutine
@@ -490,7 +501,7 @@ EE_LOOP3
     ADD R0,R0,#1
     AND R6,R5,R7        ; R6 can be used for other purpose from now on
     ; R0,R1,R3,R5 can't be changed
-    BRnp EE_SEARCHDAY   ; if this day has the event, look if there's conflicts; not conflicts, fill it in
+    BRnp EE_SEARCHDAY   ; if this day has the event, see conflicts; no conflicts, fill it in
     EE_SEARCHDAY_RET
     ADD R5,R5,R5
     BRnp    EE_LOOP3
@@ -511,10 +522,11 @@ EE_SEARCHDAY        ; check if schedule is available
     ; if this space is not filled, we can fill it
     ADD R2,R3,#0    ; get the pointer address of the main stack, the pointer is on the weekdays now
     ADD R2,R2,#-4   ; R2 is on the event address now
-    LDR R6,R2,#0    ; first address of the event is put to R6, R6 point to the first of event string
+    LDR R6,R2,#0    ; first address of the event is put to R6 pointing to the first of event string
     STR R6,R4,#0    ; fill the pointer in the array
 
-    ; now we initailise a new stack to remeber which location in the array we have filled, so it will be easy to clean it.
+    ; now we initailise a new stack to remeber which location in the array we have filled, 
+    ; so it will be easy to clean it.
     ; R4 store this array address
     LEA  R7,EE_CLEAR_ARRAY_STACK
     LD   R2,EE_STACK_POINTER
@@ -523,11 +535,11 @@ EE_SEARCHDAY        ; check if schedule is available
     ADD  R2,R2,#1   ; stack pointer increment by 1
     ST   R2,EE_STACK_POINTER    ; stack pointer store back to the adress
     BR EE_SEARCHDAY_RET
-EE_SKIP_EVENT
+EE_SKIP_EVENT       ; this event should be skipped, mark R6 as -1
     ADD R6,R6,#-1
     BR  EE_SKIP_EVENT_RET
 
-EE_SKIP_EVENT_TRUE
+EE_SKIP_EVENT_TRUE  ; if the event should be skipped, revert back the pointer of the stack
     ADD R3,R3,#-4
     BR  EE_NEXT_EVENT
 EE_INVALID_SLOT
@@ -576,16 +588,16 @@ EE_LOOP7
 
     ADD R3,R3,#-1  
     ADD R4,R4,#-1
-    BRp EE_CLEAR        ; if this event is invalid, it means the time taken prior to this event has taken the wrong time
-                        ; so we need to remove the previous event as well in the stack, loop twice
+    BRp EE_CLEAR ; if this event is invalid, it means the time taken prior to this event has taken 
+    ; the wrong time so we need to remove the previous event as well in the stack, loop twice
     ADD R1,R1,#-3
     ADD R3,R3,#4
     LD  R0,EE_STACK ; R0 is the location of the small stack
     NOT R0,R0
     ADD R0,R0,#1    ;R0 = -R0
     ADD R0,R3,R0    ;R0 = R3-R0
-    BRz EE_ERROR    ; the stack is empty, which means that can not be fullfilled and no solution for the search
-
+    BRz EE_ERROR    ; the stack is empty, which means that can not be fullfilled. No solution.
+    
     ; stack initialization: copied from above
     AND R4,R4,#0
     LEA R2,EE_CLEAR_ARRAY_STACK
@@ -598,7 +610,7 @@ EE_LOOP7
 EE_SKIP6
     ADD R3,R3,#-3
     ADD R4,R4,#-1
-    BR EE_CLEAR
+    BR EE_CLEAR     ; jump to clear the stack
 
 EE_ERROR        ; pirnt error message
     LEA R0,EE_ERROR_MESSAGE
@@ -662,7 +674,7 @@ DF_LOOP
     ADD R3,R3,R2
     LD  R0,FD_ARRAY     ; load the initial position of the array 
     ADD R3,R3,R0
-    ST  R3,FD_OUTPUT
+    ST  R3,FD_OUTPUT    ; retrun the calculated value of the subroutine into an address
 ; Restore registers
     LD  R0,  FD_REG_0
     LD  R1,  FD_REG_1
