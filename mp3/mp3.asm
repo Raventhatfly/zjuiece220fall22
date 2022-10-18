@@ -420,9 +420,6 @@ EE_NEXT_EVENT
     ; ADD R4,R4,#1
     LEA R2,EE_STACK_POINTER
     STR R4,R2,#0
-
-
-
     AND R4,R4,#0
     ADD R4,R4,#3    ; the stack structrure I design have three address
 EE_LOOP1            ; copy the event into the stack---do not change R1,R3
@@ -464,9 +461,7 @@ EE_LOOP2
     STR R6,R3,#0    ; mask the time slot so if this time is not compatible it will never search this time
     ADD R3,R3,#2
     ST  R0,EE_SELECT_TIME
-    ; ADD R3,R3,#-1   ;points to the current day 
-    ; STR R0,R3,#0    ; store the time
-    ; ADD R3,R3,#1
+    
     ST  R0,TIME_INPUT       ; the time selected is stored in an address of the subroutine
 
 ; weekdays
@@ -539,26 +534,11 @@ NO_SPARE_TIME
 
     EE_CLEAR
     ADD R3,R3,#-1   ; current day
-;     AND R5,R5,#0
-;     ADD R5,R5,#1
-;     AND R0,R0,#0
-
-; EE_LOOP6    
-;     LDR R2,R3,#0
-;     AND R2,R5,R2
-;     BRnp    EE_SKIP2
-;     ADD R5,R5,R5
-;     BRz     EE_SKIP4
-;     ADD R0,R0,#1
-;     BR  EE_LOOP6
     
     LDR R0,R3,#0
     BRn EE_SKIP6    ; if R0 contains xffff, this means that no time taken for the event
     ADD R3,R3,#-1   ; current time
-;EE_SKIP2        ; R0 is time
     
-    
-
     ST  R0,TIME_INPUT
     AND R0,R0,#0    ;R0 is week day
     ADD R3,R3,#-1   ; week days
@@ -578,13 +558,7 @@ EE_LOOP7
     ADD R5,R5,R5
     BRnp    EE_LOOP7
     
-; EE_SKIP4
-;     ADD R3,R3,#-1
-
-    ADD R3,R3,#-1
-
-  
-    
+    ADD R3,R3,#-1  
     ADD R4,R4,#-1
     BRp EE_CLEAR
 
@@ -605,7 +579,6 @@ EE_LOOP7
     LEA R2,EE_STACK_POINTER
     STR R4,R2,#0
     BR SELECT_TIME_SLOT
-    ;BR   EE_NEXT_EVENT ; jump to the location to take the next thing in the list
 EE_SKIP6
     ADD R3,R3,#-3
     ADD R4,R4,#-1
@@ -662,7 +635,6 @@ DF_LOOP
     LD  R0,FD_ARRAY
     ADD R3,R3,R0
     ST  R3,FD_OUTPUT
-
 
     LD  R0,  FD_REG_0
     LD  R1,  FD_REG_1
