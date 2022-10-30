@@ -302,8 +302,61 @@ rect_gradient(int32_t x, int32_t y, int32_t w, int32_t h, int32_t start_color, i
 
 int32_t
 draw_picture(){
-	/* Your code goes here! */
+	int32_t balck = 0x00ffffff;
+	int32_t white = 0;
+	int32_t mark = 0x00123456;
+	set_color(balck);
+	draw_circle(312,187,0,132);
+	//226,89;399,89
+	set_color(white);
+	for(int i = 0; i<=89;i++){
+		draw_line(0,i,700,i);
+	}
+	//279,315;346,315
+	for(int i = 320; i>=315;i++){
+		draw_line(0,i,700,i);
+	}
+	set_color(black);
+	draw_circle(261,287,0,34);
+	draw_circle(364,287,0,34);
+	draw_circle(257,126,0,49);
+	draw_circle(368,126,0,49); 
+	//277,82;348,82
+	for(int i=82;i<=120;i++)
+	{
+		draw_line(277,i,348,i);
+	}
+	//214,275;231,300
+	//412,274;395,300
+
+	// draw_line(214,275,231,300);
+	// draw_line(412,274,395,300);
+	for(int i=0;i<=15;i++){
+		draw_line(i+214,275,231+i,300);
+		draw_line(412-i,274,395-i,300);
+	}
 
 
-	return 0;
+	set_color(white);
+	draw_circle(313,306,0,61);
+	draw_circle(313,3,0,87);
+	draw_circle(458,170,0,67);
+
+
+	//draw the leafs
+
+	//303,4 R=72; 380,72,R=72
+	for(int i=300,i<=378,i++){
+		for(int j=0;j<=78;j++)
+		if(((i-103)*(i-103)+(j-4)*(j-4)<5184)&&((i-380)*(i-380)+(j-72)*(j-72)<5184)){
+			draw_dot(i,j);
+		}
+	}
+
+
+
+
+
+
+	
 }
