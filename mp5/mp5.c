@@ -331,8 +331,8 @@ draw_picture(){
 	// draw_line(214,275,231,300);
 	// draw_line(412,274,395,300);
 	for(int i=0;i<=15;i++){
-		draw_line(i+214,275,231+i,300);
-		draw_line(412-i,274,395-i,300);
+		draw_line(i+214,275,231+i,301);
+		draw_line(415-i,270,394-i,302);
 	}
 
 
