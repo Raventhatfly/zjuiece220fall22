@@ -320,45 +320,46 @@ int32_t
 draw_picture(){
 	int32_t white = 0x00ffffff;
 	int32_t black = 0;
+	int32_t within = 1;
 
 	// draw the main circle
 	set_color(black);
-	draw_circle(312,187,0,132);
+	within &= draw_circle(312,187,0,132);
 	//226,89;399,89
 	set_color(white);
 	for(int i = 0; i<=89;i++){
-		draw_line(0,i,700,i);
+		within &= draw_line(0,i,700,i);
 	}
 	//279,315;346,315
 	for(int i = 320; i>=315;i--){
-		draw_line(0,i,700,i);
+		within &= draw_line(0,i,700,i);
 	}
 
 	//draw the main body
 	set_color(black);
-	draw_circle(261,287,0,34);
-	draw_circle(364,287,0,34);
-	draw_circle(257,126,0,49);
-	draw_circle(368,126,0,49); 
+	within &= draw_circle(261,287,0,34);
+	within &= draw_circle(364,287,0,34);
+	within &= draw_circle(257,126,0,49);
+	within &= draw_circle(368,126,0,49); 
 	//277,82;348,82
 	for(int i=82;i<=120;i++)
 	{
-		draw_line(277,i,348,i);
+		within &= draw_line(277,i,348,i);
 	}
 	//214,275;231,300
 	//412,274;395,300
 
 	for(int i=0;i<=15;i++){
-		draw_line(i+214,275,231+i,301);
-		draw_line(415-i,270,394-i,302);
+		within &= draw_line(i+214,275,231+i,301);
+		within &= draw_line(415-i,270,394-i,302);
 	}
 
 	//cut off some sueless parts
 	set_color(white);
 	//draw_circle(313,306,0,61);
-	draw_circle(313,363,0,61);
-	draw_circle(313,3,0,87);
-	draw_circle(458,170,0,67);
+	within &= draw_circle(313,363,0,61);
+	within &= draw_circle(313,3,0,87);
+	within &= draw_circle(458,170,0,67);
 
 
 	//draw the leafs
@@ -371,10 +372,10 @@ draw_picture(){
 
 			if(((i-303)*(i-303)+(j-4)*(j-4)<5184)&&((i-380)*(i-380)+(j-72)*(j-72)<5184))
 			{
-			draw_dot(i,j);	//if in the area, draw the point black
+			within &= draw_dot(i,j);	//if in the area, draw the point black
 			}
 		}
 	}
-	return 0;
+	return within;
 }
 
