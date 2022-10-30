@@ -36,6 +36,22 @@
 	You must write all your code only in this file, for all the functions!
 */
 
+/*
+MP5 Introduction:
+AUthor: Wu Feiyang
+Creation Date: 30 October 2022
+
+This is my mp5 assignment. This file contain several functions:
+near_horizontal;near_vertical;draw_line:draw_circle;draw_rect;draw_triangle
+draw_rect;draw_triangle;rect_gradient
+
+And at last the draw_picture function I created.
+This function basically draw the logo of Apple Inc.
+I managed to draw many circles and lines to make the pattern.
+
+
+*/
+
 
 
 /* 
@@ -304,6 +320,8 @@ int32_t
 draw_picture(){
 	int32_t white = 0x00ffffff;
 	int32_t black = 0;
+
+	// draw the main circle
 	set_color(black);
 	draw_circle(312,187,0,132);
 	//226,89;399,89
@@ -315,6 +333,8 @@ draw_picture(){
 	for(int i = 320; i>=315;i--){
 		draw_line(0,i,700,i);
 	}
+
+	//draw the main body
 	set_color(black);
 	draw_circle(261,287,0,34);
 	draw_circle(364,287,0,34);
@@ -328,14 +348,12 @@ draw_picture(){
 	//214,275;231,300
 	//412,274;395,300
 
-	// draw_line(214,275,231,300);
-	// draw_line(412,274,395,300);
 	for(int i=0;i<=15;i++){
 		draw_line(i+214,275,231+i,301);
 		draw_line(415-i,270,394-i,302);
 	}
 
-
+	//cut off some sueless parts
 	set_color(white);
 	//draw_circle(313,306,0,61);
 	draw_circle(313,363,0,61);
@@ -345,14 +363,15 @@ draw_picture(){
 
 	//draw the leafs
 
-	//303,4 R=72; 380,72,R=72
+	//find the between area of the two circles, 303,4 R=72; 380,72,R=72
+	// and fill the area black
 	set_color(black);
 	for(int i=0;i<=600;i++){
 		for(int j=0;j<=200;j++){
 
 			if(((i-303)*(i-303)+(j-4)*(j-4)<5184)&&((i-380)*(i-380)+(j-72)*(j-72)<5184))
 			{
-			draw_dot(i,j);
+			draw_dot(i,j);	//if in the area, draw the point black
 			}
 		}
 	}
