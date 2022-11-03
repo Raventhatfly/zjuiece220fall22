@@ -44,7 +44,18 @@
 #include <stdio.h>
 
 #include "mp6.h"
+/*
+MP6 Introduction
+Author: Wu Feiyang
+Finish Date: November 3rd, 2022
+In this assignment, I wrote several functions.
+These functions include board operation and piece operation.
+Board Operation include cleaning the board and remove rows filled
+with old blocks.
+Piece operations include  
 
+
+*/
 
 /* 
  * The maximum number of blocks in one piece.  Do not change for
@@ -120,7 +131,7 @@ empty_board (space_type_t b[BOARD_HEIGHT][BOARD_WIDTH])
 {
     for(int i=0;i<BOARD_HEIGHT;i++){
         for(int j=0;j<BOARD_WIDTH;j++){
-            b[i][j]=SPACE_EMPTY;
+            b[i][j]=SPACE_EMPTY;    // fill all the locations empty
         }
     }
     return 1;
@@ -148,6 +159,7 @@ mark_piece (space_type_t b[BOARD_HEIGHT][BOARD_WIDTH],
 	    space_type_t v)
 {
      for(int i=0;i<MAX_PIECE_SIZE;i++){
+        // fill the target locations with target space type v
         b[y+piece_def[p][orient][i][1]][x+piece_def[p][orient][i][0]]=v;
     }
 }
@@ -173,14 +185,16 @@ fit_result_t
 test_piece_fit (space_type_t b[BOARD_HEIGHT][BOARD_WIDTH], 
                 piece_type_t p, int32_t orient, int32_t x, int32_t y)
 {
-    int32_t current_x;
-    int32_t current_y;
+    int32_t current_x;  // the x coordinates to be tested
+    int32_t current_y;  // the y coordinates to be tested
     for(int i=0;i<MAX_PIECE_SIZE;i++){
         current_x = x + piece_def[p][orient][i][0];
         current_y = y + piece_def[p][orient][i][1];
+        // handle out of board cases 
         if((current_x<0||current_x>=BOARD_WIDTH||current_y<0||current_y>=BOARD_HEIGHT)){
             return FIT_OUT_OF_BOARD;
         }
+        // handle space filled with old block
         if(b[current_y][current_x]==SPACE_FULL){
             return FIT_NO_ROOM_THERE;
         }
@@ -208,19 +222,19 @@ print_board (space_type_t b[BOARD_HEIGHT][BOARD_WIDTH])
             switch (b[i][j])
             {
             case SPACE_EMPTY:
-                printf(".");
+                printf(".");    // print empty spaces
                 break;
             case SPACE_FULL:
-                printf("%c",37); //print "%"
+                printf("%c",37); // print "%" whose ascii is 37
                 break;
             case SPACE_BLOCK:
-                printf("*");
+                printf("*");    // current block print "*"
                 break;
             default:
                 break;
             }
         }
-        printf("\n");
+        printf("\n");   // next line
     }
 }
 
@@ -246,11 +260,12 @@ try_to_move_down (space_type_t b[BOARD_HEIGHT][BOARD_WIDTH],
                   piece_type_t p, int32_t orient, int32_t x, int32_t y)
 {
     if(test_piece_fit(b,p,orient,x,y+1)==FIT_SUCCESS){
+         //remove the old piece and make the new piece
         remove_piece(b,p,orient,x,y);
         mark_piece(b,p,orient,x,y+1,SPACE_BLOCK);
         return 1;
     }else{
-        return 0;
+        return 0;   // failure to rotate return 0
     }
 }
 
@@ -277,11 +292,12 @@ try_to_move_left (space_type_t b[BOARD_HEIGHT][BOARD_WIDTH],
 {
 
     if(test_piece_fit(b,p,orient,x-1,y)==FIT_SUCCESS){
+         //remove the old piece and make the new piece
         remove_piece(b,p,orient,x,y);
         mark_piece(b,p,orient,x-1,y,SPACE_BLOCK);
         return 1;
     }else{
-        return 0;
+        return 0;   // failure to rotate return 0
     }
 }
 
@@ -307,11 +323,12 @@ try_to_move_right (space_type_t b[BOARD_HEIGHT][BOARD_WIDTH],
                    piece_type_t p, int32_t orient, int32_t x, int32_t y)
 {
     if(test_piece_fit(b,p,orient,x+1,y)==FIT_SUCCESS){
+        //remove the old piece and make the new piece
         remove_piece(b,p,orient,x,y);
         mark_piece(b,p,orient,x+1,y,SPACE_BLOCK);
         return 1;
     }else{
-        return 0;
+        return 0;   // failure to move return 0
     }
 }
 
@@ -337,11 +354,12 @@ try_to_rotate_clockwise (space_type_t b[BOARD_HEIGHT][BOARD_WIDTH],
                          piece_type_t p, int32_t orient, int32_t x, int32_t y)
 {
     if(test_piece_fit(b,p,(orient+1)%4,x,y)==FIT_SUCCESS){
+        //remove the old piece and make the new piece
         remove_piece(b,p,orient,x,y);
         mark_piece(b,p,(orient+1)%4,x,y,SPACE_BLOCK);
         return 1;
     }else{
-        return 0;
+        return 0;   // failure to rotate return 0
     }
 }
 
@@ -367,11 +385,12 @@ try_to_rotate_cc (space_type_t b[BOARD_HEIGHT][BOARD_WIDTH],
                   piece_type_t p, int32_t orient, int32_t x, int32_t y)
 {
     if(test_piece_fit(b,p,(orient+3)%4,x,y)==FIT_SUCCESS){
+        //remove the old piece and make the new piece
         remove_piece(b,p,orient,x,y);
         mark_piece(b,p,(orient+3)%4,x,y,SPACE_BLOCK);
         return 1;
     }else{
-        return 0;
+        return 0;       // failure to rotate return 0
     }
 }
 
@@ -392,10 +411,12 @@ remove_row (space_type_t b[BOARD_HEIGHT][BOARD_WIDTH], int row)
 {
     for(int j=row;j>0;j--){
         for(int i=0;i<BOARD_WIDTH;i++){
-            b[j][i] = b[j-1][i];
+            // fetch content of the above row to next row
+            b[j][i] = b[j-1][i];    
         }
     }
     for(int i=0;i<BOARD_WIDTH;i++){
+        // fill the first new row empty
         b[0][i]=SPACE_EMPTY;
     }
 }
@@ -413,12 +434,17 @@ remove_row (space_type_t b[BOARD_HEIGHT][BOARD_WIDTH], int row)
 void
 remove_full_rows (space_type_t b[BOARD_HEIGHT][BOARD_WIDTH])
 {   
-    int32_t flag=1;
+    int32_t flag;
     for(int32_t j=BOARD_HEIGHT-1;j>=0;j--){
+        flag = 1;   // initialise the flag
         for(int32_t i=0;i<BOARD_WIDTH;i++){
-            flag &= (b[j][i]==SPACE_FULL);
+            flag &= (b[j][i]==SPACE_FULL);  // flag 0, no need to remove line
         }
-        if(flag)    remove_row(b,j);
+        if(flag){
+            remove_row(b,j);
+            j++;    // handle cases when row above the removed row need
+                    // to be removed
+        }
     }
 }
 
