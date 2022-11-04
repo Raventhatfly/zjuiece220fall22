@@ -262,7 +262,7 @@ try_to_move_down (space_type_t b[BOARD_HEIGHT][BOARD_WIDTH],
     if(test_piece_fit(b,p,orient,x,y+1)==FIT_SUCCESS){
          //remove the old piece and make the new piece
         remove_piece(b,p,orient,x,y);
-        mark_piece(b,p,orient,x,y+1,SPACE_BLOCK);
+        add_piece(b,p,orient,x,y+1);
         return 1;
     }else{
         return 0;   // failure to rotate return 0
@@ -294,7 +294,7 @@ try_to_move_left (space_type_t b[BOARD_HEIGHT][BOARD_WIDTH],
     if(test_piece_fit(b,p,orient,x-1,y)==FIT_SUCCESS){
          //remove the old piece and make the new piece
         remove_piece(b,p,orient,x,y);
-        mark_piece(b,p,orient,x-1,y,SPACE_BLOCK);
+        add_piece(b,p,orient,x-1,y);
         return 1;
     }else{
         return 0;   // failure to rotate return 0
@@ -325,7 +325,7 @@ try_to_move_right (space_type_t b[BOARD_HEIGHT][BOARD_WIDTH],
     if(test_piece_fit(b,p,orient,x+1,y)==FIT_SUCCESS){
         //remove the old piece and make the new piece
         remove_piece(b,p,orient,x,y);
-        mark_piece(b,p,orient,x+1,y,SPACE_BLOCK);
+        add_piece(b,p,orient,x+1,y);
         return 1;
     }else{
         return 0;   // failure to move return 0
@@ -356,7 +356,7 @@ try_to_rotate_clockwise (space_type_t b[BOARD_HEIGHT][BOARD_WIDTH],
     if(test_piece_fit(b,p,(orient+1)%4,x,y)==FIT_SUCCESS){
         //remove the old piece and make the new piece
         remove_piece(b,p,orient,x,y);
-        mark_piece(b,p,(orient+1)%4,x,y,SPACE_BLOCK);
+        add_piece(b,p,(orient+1)%4,x,y);
         return 1;
     }else{
         return 0;   // failure to rotate return 0
@@ -387,7 +387,7 @@ try_to_rotate_cc (space_type_t b[BOARD_HEIGHT][BOARD_WIDTH],
     if(test_piece_fit(b,p,(orient+3)%4,x,y)==FIT_SUCCESS){
         //remove the old piece and make the new piece
         remove_piece(b,p,orient,x,y);
-        mark_piece(b,p,(orient+3)%4,x,y,SPACE_BLOCK);
+        add_piece(b,p,(orient+3)%4,x,y);
         return 1;
     }else{
         return 0;       // failure to rotate return 0
