@@ -1,1 +1,56 @@
 PUT YOUR MP7 REPORT IN THIS FILE.
+
+PART I: printRev
+
+1. Identifying the bug
+The code takes in one string and print out the string in its reverse order, and the length of the string. If no string were taken, the program raises an error. 
+
+Erroneous test cases
+My Input: “ece220”
+Desired Output："ece220" reversed is "022ece" (length 6)
+Actual Output:"ece220" reversed is "022ece" (length 32770)
+
+Correct Test case:
+My Input: “123”
+Desired Output："123" reversed is "321" (length 3)
+Actual Output:"123" reversed is "321" (length 3)
+
+2.Trace the bug
+	gdb commands I used:
+	break pr_buggy.c:41
+	run apple
+	display rest
+	continue
+	Results from the gdb(partially):
+
+	Breakpoint 1, print_reverse (s=0x7fffffffe05c "le") at pr_buggy.c:40
+	40          if ('\0' == *s) {
+	2: rest = 0
+	(gdb) 
+	Continuing.
+	
+	Breakpoint 1, print_reverse (s=0x7fffffffe05d "e") at pr_buggy.c:40
+	40          if ('\0' == *s) {
+	2: rest = 32767
+	(gdb) 
+	Continuing.
+
+	We can see from the results produced above, the former variable “rest” during the recursion process is initialized to be 0, but it was suddenly initialized to a erroneous number 32676. It should always be 0 during recursion,so this leads to the bad result.   
+
+3.Analysis of the bug: The bug lies in the function “print_reverse” in which the variable “rest” is never initialized. The erroneous result is due to the fact that the  integer “rest” was not initialized and might become a random number in the memory. I fix the bug by initializing the variable as 0.
+
+
+PART II:
+1. Identifying the bug
+My input: This program does not need input.
+Correct Test case(ideal output):
+2 is prime.
+3 is prime.
+4 is prime.
+5 is prime.
+7 is prime.(Etc.)
+Erroneous Test cases:	All of the prime’s squares.
+4 is prime.
+9 is prime.
+25 is prime.
+49 is prime.(Etc.)
