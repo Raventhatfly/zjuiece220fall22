@@ -36,7 +36,7 @@ to pointers to swap.
  */
 void
 find_nodes (locale_t* loc, vertex_set_t* vs, pyr_tree_t* p, int32_t nnum)
-{
+{   
     // Do not modify the following line nor add anything above in the function.
     record_fn_call ();
     // If leaf node reached, stop recursion.
@@ -48,20 +48,17 @@ find_nodes (locale_t* loc, vertex_set_t* vs, pyr_tree_t* p, int32_t nnum)
         }   
         return;
     }
-    // Optimal recursion: We will not recurse in the direction when the pyramid node is out of the 
-    // range of the circle and it is in the same direction it is going to recurse.
-    if(4*nnum+1<p->n_nodes && !(!in_range(loc,p->node[nnum].x,p->node[nnum].y_left) //upper left
-        && p->node[nnum].x < loc->x && p->node[nnum].y_left < loc->y))     find_nodes(loc,vs,p,nnum*4+1);
-    if(4*nnum+2<p->n_nodes && !(!in_range(loc,p->node[nnum].x,p->node[nnum].y_left) //upper right
-        && p->node[nnum].x > loc->x && p->node[nnum].y_right < loc->y))    find_nodes(loc,vs,p,nnum*4+2);
-    if(4*nnum+3<p->n_nodes && !(!in_range(loc,p->node[nnum].x,p->node[nnum].y_left) //lower left
-        && p->node[nnum].x < loc->x && p->node[nnum].y_left > loc->y))     find_nodes(loc,vs,p,nnum*4+3);
-    if(4*nnum+4<p->n_nodes && !(!in_range(loc,p->node[nnum].x,p->node[nnum].y_left) //lower right
-        && p->node[nnum].x > loc->x && p->node[nnum].y_right > loc->y))    find_nodes(loc,vs,p,nnum*4+4);
-    // if(4*nnum+1<p->n_nodes)    find_nodes(loc,vs,p,nnum*4+1);
-    // if(4*nnum+2<p->n_nodes)    find_nodes(loc,vs,p,nnum*4+2);
-    // if(4*nnum+3<p->n_nodes)    find_nodes(loc,vs,p,nnum*4+3);
-    // if(4*nnum+4<p->n_nodes)    find_nodes(loc,vs,p,nnum*4+4);
+    // start recursion: if this is not the leaf node and no source vertices in the 
+    // to be recursed area, than do not recurse that area 
+    if(4*nnum+1<p->n_nodes && !(loc->y -  p->node[nnum].y_left > loc->range     //upper left
+        || loc->x - p->node[nnum].x > loc->range))    find_nodes(loc,vs,p,nnum*4+1);
+    if(4*nnum+2<p->n_nodes && !(loc->y -  p->node[nnum].y_right > loc->range    //upper right
+        || p->node[nnum].x - loc->x > loc->range))    find_nodes(loc,vs,p,nnum*4+2);
+    if(4*nnum+3<p->n_nodes && !(p->node[nnum].y_left - loc->y  > loc->range     //lower left
+        || loc->x - p->node[nnum].x > loc->range))    find_nodes(loc,vs,p,nnum*4+3);
+    if(4*nnum+4<p->n_nodes && !(p->node[nnum].y_right - loc->y > loc->range     //lower right
+        || p->node[nnum].x - loc->x > loc->range))    find_nodes(loc,vs,p,nnum*4+4);
+
 }
 
 
@@ -81,7 +78,7 @@ trim_nodes (graph_t* g, vertex_set_t* vs, locale_t* loc)
     int32_t cnt = 0;    //new veretex set counter
     for (int32_t i=0;i<vs->count;i++){
         if(in_range(loc,g->vertex[vs->id[i]].x,g->vertex[vs->id[i]].y)){
-            vs->id[cnt]=vs->id[i];
+            vs->id[cnt]=vs->id[i];  // set the current array at index cnt
             cnt++;
         } 
     }
@@ -250,6 +247,8 @@ heap_pop(graph_t* g, heap_t* h){
     int32_t u;
     u = h->elt[0];  // popped value
     h->elt[0] = h->elt[h->n_elts-1];
+    // the heap_id of the last element is now 0
+    g->vertex[h->elt[h->n_elts-1]].heap_id = 0; 
     h->n_elts--;
     down_update(g,h,0);
     return u;
