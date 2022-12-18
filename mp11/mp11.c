@@ -203,10 +203,18 @@ gen_for_statement (ast220_t* ast)
     printf("%s\n",label_value(loop_begin));
     gen_expression(ast->test);
     printf("\tLDR R0,R6,#0\n");
-    printf("\tBRz %s\n",label_value(loop_exit));
-    gen_statement(ast->middle);
+    printf("\tADD R6,R6,#1\n");     /* pop array index from stack*/
+    printf("\tADD R0,R0,#0\n");     /* Set CC*/
+    /*printf("\tBRz %s\n",label_value(loop_exit));*/
+    gen_long_branch(BR_Z,loop_exit);
+    ast220_t* temp = ast->middle;
+    while(temp != NULL){
+        gen_statement(temp);
+        temp = temp->next;
+    }
     if(ast->right != NULL)    gen_statement(ast->right);
-    printf("\tBRnzp %s\n",label_value(loop_begin));
+    /*printf("\tBRnzp %s\n",label_value(loop_begin));*/
+    gen_long_branch(BR_ALWAYS,loop_begin);
     printf("%s\n",label_value(loop_exit));
     printf(";end for\n");
 }
@@ -225,15 +233,31 @@ gen_if_statement (ast220_t* ast)
     ece220_label_t* else_label = label_create();
     ece220_label_t* end_label = label_create();
     gen_expression(ast->test);
-    printf(";get if\n");
     printf("\tLDR R0,R6,#0\n");
-    printf("\tBRz %s\n",label_value(else_label)); /*I can use long branch here*/
-    gen_statement(ast->left);
-    printf("\tBRnzp %s\n",label_value(end_label));
+    printf("\tADD R6,R6,#1\n");     /* pop array index from stack*/
+    printf("\tADD R0,R0,#0\n");     /* Set CC*/
+    if(ast->right != NULL){
+        gen_long_branch(BR_Z,else_label);
+    }else{
+        gen_long_branch(BR_Z,end_label);
+    }
+    ast220_t* temp1 = ast->left; 
+    while(temp1 != NULL){
+        gen_statement(temp1);
+        temp1 = temp1->next;
+    }
+    gen_long_branch(BR_ALWAYS,end_label);
     printf("\t%s\n",label_value(else_label));
-    gen_statement(ast->right);
+    if(ast->right != NULL){
+        ast220_t* temp2 = ast->right;
+        while(temp2 != NULL){
+            gen_statement(temp2);
+            temp2 = temp2->next;
+        }
+    } 
     printf("\t%s\n",label_value(end_label));
 }
+
 
 /* 
  * gen_return_statement
@@ -393,6 +417,7 @@ gen_push_variable (ast220_t* ast)
     if(ast->left != NULL){
         gen_expression(ast->left);
         printf("\tLDR R0,R6,#0\n");
+        printf("\tADD R6,R6,#1\n");
     }
     symtab_entry_t* entry = symtab_lookup(ast->name);
     if(entry->is_global){
@@ -456,7 +481,7 @@ gen_func_call (ast220_t* ast)
     printf ("%s\n", label_value (false_label));
 
     printf("\tLDR R1,R6,#0\n");
-    for(cnt;cnt>0;cnt--){
+    for(;cnt>0;cnt--){
         printf("\tADD R6,R6,#1\n");
     }
     printf("\tSTR R1,R6,#0\n");
@@ -478,6 +503,7 @@ gen_get_address (ast220_t* ast)
     if(ast->left->left != NULL){
         gen_expression(ast->left);
         printf("\tLDR R0,R6,#0\n");     /*array index offset?*/
+        printf("\tADD R6,R6,#1\n");     /* pop array index from stack*/
     }
     symtab_entry_t* entry = symtab_lookup(ast->left->name);
     printf(";%s\n",ast->left->name);
@@ -489,7 +515,7 @@ gen_get_address (ast220_t* ast)
     }
     printf("\tADD R1,R1,R0\n");     /*add array index offset?*/
     printf("\tADD R6,R6,#-1\n");
-    printf("\tLDR R1,R6,#0\n");
+    printf("\tSTR R1,R6,#0\n");
 }
 
 /* 
@@ -508,12 +534,13 @@ gen_op_assign (ast220_t* ast)
 {
     if(ast->left->left != NULL){
         printf(";array indexing start\n");
-        gen_expression(ast->left->left);
         gen_expression(ast->right);
+        gen_expression(ast->left->left);
         printf("\tAND R3,R3,#0\n");
-        printf("\tLDR R1,R6,#0\n");/*R1 store value*/
-        printf("\tLDR R0,R6,#1\n");/*R0 store offset*/
+        printf("\tLDR R1,R6,#1\n");/*R1 store value*/
+        printf("\tLDR R0,R6,#0\n");/*R0 store offset*/
         printf("\tADD R3,R3,R0\n");/*array offset added to address R3*/
+        printf("\tADD R6,R6,#1\n");/*pop off array offset from stack*/
         printf(";array indexing end\n");
     }else{
         gen_expression(ast->right);
@@ -550,6 +577,7 @@ gen_op_pre_incr (ast220_t* ast)
     if(ast->left->left != NULL){
         gen_expression(ast->left->left);
         printf("\tLDR R3,R6,#0\n");
+        printf("\tADD R6,R6,#1\n");
     }else{
         printf("\tAND R3,R3,#0\n");
     }
@@ -583,6 +611,7 @@ gen_op_pre_decr (ast220_t* ast)
     if(ast->left->left != NULL){
         gen_expression(ast->left->left);
         printf("\tLDR R3,R6,#0\n");
+        printf("\tADD R6,R6,#1\n");
     }else{
         printf("\tAND R3,R3,#0\n");
     }
@@ -617,6 +646,7 @@ gen_op_post_incr (ast220_t* ast)
     if(ast->left->left != NULL){
         gen_expression(ast->left->left);
         printf("\tLDR R3,R6,#0\n");
+        printf("\tADD R6,R6,#1\n");
     }else{
         printf("\tAND R3,R3,#0\n");
     }
@@ -650,6 +680,7 @@ gen_op_post_decr (ast220_t* ast)
     if(ast->left->left != NULL){
         gen_expression(ast->left->left);
         printf("\tLDR R3,R6,#0\n");
+        printf("\tADD R6,R6,#1\n");
     }else{
         printf("\tAND R3,R3,#0\n");
     }
@@ -701,8 +732,9 @@ gen_op_sub (ast220_t* ast)
 {
     gen_expression(ast->left);
     gen_expression(ast->right);
-    gen_op_negate(ast);
     printf("\tLDR R1,R6,#0\n");
+    printf("\tNOT R1,R1\n");
+    printf("\tADD R1,R1,#1\n");
     printf("\tLDR R2,R6,#1\n");
     printf("\tADD R1,R1,R2\n");
     printf("\tADD R6,R6,#1\n");
@@ -820,10 +852,10 @@ static void
 gen_op_negate (ast220_t* ast)
 {
     gen_expression(ast->left);
-    printf("LDR     R1,R6,#0\n");
-    printf("NOT     R1,R1\n");
-    printf("ADD     R1,R1,#1");
-    printf("STR     R1,R6,#0\n");
+    printf("LDR R1,R6,#0\n");
+    printf("NOT R1,R1\n");
+    printf("ADD R1,R1,#1\n");
+    printf("STR R1,R6,#0\n");
 }
 
 /* 
@@ -865,18 +897,21 @@ static void
 gen_op_log_or (ast220_t* ast)
 {
     ece220_label_t* label = label_create();
-    ece220_label_t* label2 = label_create();
+    ece220_label_t* end_label = label_create();
     gen_expression(ast->left);
+    printf("\tAND R0,R0,#0\n");
+    printf("\tADD R0,R0,#1\n");
+    printf("\tLDR R1,R6,#0\n");
+    printf("\tBRnp %s\n",label_value(end_label));
     gen_expression(ast->right);
     printf("\tAND R0,R0,#0\n");
+    printf("\tADD R0,R0,#1\n");
     printf("\tLDR R1,R6,#0\n");
     printf("\tBRnp %s\n",label_value(label));
-    printf("\tLDR R2,R6,#1\n");
-    printf("\tBRnp %s\n",label_value(label));
-    printf("\tBRnzp %s\n",label_value(label2));
-    printf("\t%s\n\tADD R0,R0,#1\n",label_value(label));
-    printf("\t%s\n",label_value(label2));
+    printf("\tAND R0,R0,#0\n");
+    printf("\t%s\n",label_value(label));
     printf("\tADD R6,R6,#1\n");
+    printf("\t%s\n",label_value(end_label));
     printf("\tSTR R0,R6,#0\n");
 }
 
@@ -896,19 +931,19 @@ static void
 gen_op_log_and (ast220_t* ast)
 {
     ece220_label_t* label = label_create();
-    ece220_label_t* label2 = label_create();
+    ece220_label_t* end_label = label_create();
     gen_expression(ast->left);
+    printf("\tAND R0,R0,#0\n");
+    printf("\tLDR R1,R6,#0\n");
+    printf("\tBRz %s\n",label_value(end_label));
     gen_expression(ast->right);
+    printf("\tAND R0,R0,#0\n");
     printf("\tLDR R1,R6,#0\n");
     printf("\tBRz %s\n",label_value(label));
-    printf("\tLDR R2,R6,#1\n");
-    printf("\tBRz %s\n",label_value(label));
-    printf("\tAND R0,R0,#0\n");
     printf("\tADD R0,R0,#1\n");
-    printf("\tBRnzp %s\n",label_value(label2));
-    printf("\t%s\n\tAND R0,R0,#0\n",label_value(label));
-    printf("\t%s\n",label_value(label2));
+    printf("\t%s\n",label_value(label));
     printf("\tADD R6,R6,#1\n");
+    printf("\t%s\n",label_value(end_label));
     printf("\tSTR R0,R6,#0\n");
 }
 
